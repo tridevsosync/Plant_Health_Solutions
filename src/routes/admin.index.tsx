@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { IndianRupee, Package, ShoppingCart, Users } from "lucide-react";
 import { inr, useApp } from "@/lib/store";
-import { AdminPage, Panel, StatusBadge, TableWrap, td, th } from "@/components/site/AdminUI";
+import { AdminPage, Panel, TableWrap, td, th } from "@/components/site/AdminUI";
 import type { Order } from "@/lib/data";
 
 export const Route = createFileRoute("/admin/")({
@@ -137,4 +137,3 @@ function Dashboard() {
   );
 }
 
-export { StatusBadge };
