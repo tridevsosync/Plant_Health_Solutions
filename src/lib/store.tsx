@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import {
   blogs as seedBlogs,
@@ -107,7 +109,6 @@ type Ctx = {
 };
 
 // Keep a single context instance even if this module gets evaluated twice
-// (hot reloads can otherwise create a second context and break useApp()).
 const g = globalThis as unknown as { __phsAppContext?: React.Context<Ctx | null> };
 const AppContext: React.Context<Ctx | null> =
   g.__phsAppContext ?? (g.__phsAppContext = React.createContext<Ctx | null>(null));

@@ -1,28 +1,32 @@
+"use client";
+
 import * as React from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { Heart, Leaf, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { useApp, useCartTotals } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
-  { to: "/products", label: "Products" },
-  { to: "/farmer-solutions", label: "Farmer Solutions" },
-  { to: "/blog", label: "Research Blog" },
-  { to: "/contact", label: "Contact" },
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/products", label: "Products" },
+  { href: "/farmer-solutions", label: "Farmer Solutions" },
+  { href: "/blog", label: "Research Blog" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 export function Header() {
   const { state } = useApp();
   const { count } = useCartTotals();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = usePathname();
   const [q, setQ] = React.useState("");
   const [open, setOpen] = React.useState(false);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate({ to: "/products", search: { q, category: "" } });
+    router.push(`/products?q=${encodeURIComponent(q)}`);
     setOpen(false);
   };
 
@@ -38,7 +42,7 @@ export function Header() {
       </div>
 
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
-        <Link to="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <Leaf className="h-5 w-5" />
           </span>
@@ -63,14 +67,14 @@ export function Header() {
         </form>
 
         <div className="ml-auto flex items-center gap-1 lg:ml-0">
-          <Link to="/account" className="rounded-full p-2 hover:bg-muted" aria-label="Account">
+          <Link href="/account" className="rounded-full p-2 hover:bg-muted" aria-label="Account">
             <User className="h-5 w-5 text-primary" />
           </Link>
-          <Link to="/account" className="relative rounded-full p-2 hover:bg-muted" aria-label="Wishlist">
+          <Link href="/account" className="relative rounded-full p-2 hover:bg-muted" aria-label="Wishlist">
             <Heart className="h-5 w-5 text-primary" />
             <Badge n={state.wishlist.length} />
           </Link>
-          <Link to="/cart" className="relative rounded-full p-2 hover:bg-muted" aria-label="Cart">
+          <Link href="/cart" className="relative rounded-full p-2 hover:bg-muted" aria-label="Cart">
             <ShoppingCart className="h-5 w-5 text-primary" />
             <Badge n={count} />
           </Link>
@@ -82,18 +86,21 @@ export function Header() {
 
       <nav className="hidden border-t border-border lg:block">
         <div className="mx-auto flex max-w-7xl gap-6 px-4">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              {...(l.to === "/products" ? { search: { q: "", category: "" } } : {})}
-              activeOptions={{ exact: l.to === "/" }}
-              className="border-b-2 border-transparent py-3 text-sm font-medium text-foreground/80 transition hover:text-primary"
-              activeProps={{ className: "!border-secondary !text-primary" }}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) => {
+            const isActive = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={cn(
+                  "border-b-2 border-transparent py-3 text-sm font-medium text-foreground/80 transition hover:text-primary",
+                  isActive && "!border-secondary !text-primary"
+                )}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </div>
       </nav>
 
@@ -110,9 +117,8 @@ export function Header() {
           <div className="flex flex-col">
             {links.map((l) => (
               <Link
-                key={l.to}
-                to={l.to}
-                {...(l.to === "/products" ? { search: { q: "", category: "" } } : {})}
+                key={l.href}
+                href={l.href}
                 onClick={() => setOpen(false)}
                 className="border-b border-border py-2.5 text-sm font-medium"
               >
@@ -131,7 +137,7 @@ function Badge({ n }: { n: number }) {
   return (
     <span
       className={cn(
-        "absolute -right-0 -top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-secondary-foreground",
+        "absolute -right-0 -top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-secondary-foreground"
       )}
     >
       {n}

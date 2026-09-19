@@ -1,5 +1,7 @@
+"use client";
+
 import * as React from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { Leaf, Mail, MapPin, Phone, Send, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/store";
@@ -28,13 +30,13 @@ export function Footer() {
         <div>
           <h4 className="font-display text-lg font-semibold">Quick Links</h4>
           <ul className="mt-4 space-y-2 text-sm text-primary-foreground/80">
-            <li><Link to="/about" className="hover:text-accent">About Us</Link></li>
-            <li><Link to="/products" search={{ q: "", category: "" }} className="hover:text-accent">All Products</Link></li>
-            <li><Link to="/farmer-solutions" className="hover:text-accent">Farmer Solutions</Link></li>
-            <li><Link to="/blog" className="hover:text-accent">Research Blog</Link></li>
-            <li><Link to="/contact" className="hover:text-accent">Contact</Link></li>
-            <li><Link to="/account" className="hover:text-accent">My Account</Link></li>
-            <li><Link to="/admin/login" className="hover:text-accent">Admin Login</Link></li>
+            <li><Link href="/about" className="hover:text-accent">About Us</Link></li>
+            <li><Link href="/products" className="hover:text-accent">All Products</Link></li>
+            <li><Link href="/farmer-solutions" className="hover:text-accent">Farmer Solutions</Link></li>
+            <li><Link href="/blog" className="hover:text-accent">Research Blog</Link></li>
+            <li><Link href="/contact" className="hover:text-accent">Contact</Link></li>
+            <li><Link href="/account" className="hover:text-accent">My Account</Link></li>
+            <li><Link href="/admin/login" className="hover:text-accent">Admin Login</Link></li>
           </ul>
         </div>
 
@@ -43,7 +45,7 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm text-primary-foreground/80">
             {state.categories.map((c) => (
               <li key={c.id}>
-                <Link to="/products" search={{ q: "", category: c.name }} className="hover:text-accent">
+                <Link href={`/products?category=${encodeURIComponent(c.name)}`} className="hover:text-accent">
                   {c.name}
                 </Link>
               </li>
@@ -86,10 +88,10 @@ export function Footer() {
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-primary-foreground/70 md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} {s.name}. Owner: {s.owner}. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
-            <Link to="/privacy-policy" className="hover:text-accent">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-accent">Terms</Link>
-            <Link to="/refund-policy" className="hover:text-accent">Refund Policy</Link>
-            <Link to="/shipping-policy" className="hover:text-accent">Shipping Policy</Link>
+            <Link href="/privacy-policy" className="hover:text-accent">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-accent">Terms</Link>
+            <Link href="/refund-policy" className="hover:text-accent">Refund Policy</Link>
+            <Link href="/shipping-policy" className="hover:text-accent">Shipping Policy</Link>
           </div>
         </div>
       </div>

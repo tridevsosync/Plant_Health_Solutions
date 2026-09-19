@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
 import { Eye, Heart, ShoppingCart, Star } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
@@ -82,8 +84,7 @@ export function ProductCard({
       <div className="flex flex-1 flex-col p-4">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-secondary">{product.category}</span>
         <Link
-          to="/products/$id"
-          params={{ id: product.id }}
+          href={`/products/${product.id}`}
           className="mt-1 font-display text-base font-semibold leading-snug text-foreground hover:text-primary"
         >
           {product.name}
