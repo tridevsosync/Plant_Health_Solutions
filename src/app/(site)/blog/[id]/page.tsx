@@ -25,16 +25,33 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12">
-      <span className="text-xs font-semibold uppercase tracking-wide text-secondary">{blog.category}</span>
-      <h1 className="mt-2 font-display text-4xl font-bold leading-tight text-primary">{blog.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{blog.author} · {blog.date} · {blog.readTime} min read</p>
-      <img src={blog.image} alt={blog.title} className="mt-6 h-80 w-full rounded-2xl object-cover" />
-      <div className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
-        {blog.body.map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-      </div>
+    <div>
+      <section className="relative isolate overflow-hidden">
+        <img
+          src={blog.image}
+          alt={blog.title}
+          className="absolute inset-0 -z-10 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#122b17]/95 via-[#183a1f]/90 to-[#285724]/80 backdrop-blur-[0.5px]" />
+        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 md:py-20 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent mb-3">
+            {blog.category}
+          </span>
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white">
+            {blog.title}
+          </h1>
+          <p className="mt-3 text-sm text-white/85">
+            By {blog.author} · {blog.date} · {blog.readTime} min read
+          </p>
+        </div>
+      </section>
+
+      <article className="mx-auto max-w-3xl px-4 py-12">
+        <div className="space-y-4 text-base leading-relaxed text-muted-foreground">
+          {blog.body.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
 
       <div className="mt-8 flex items-center gap-3 border-y border-border py-4">
         <span className="text-sm font-medium">Share:</span>
@@ -82,5 +99,6 @@ export default function BlogDetailPage() {
         </form>
       </section>
     </article>
+    </div>
   );
 }

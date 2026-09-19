@@ -70,9 +70,14 @@ export default function AdminLayout({
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-primary text-primary-foreground transition-transform md:static md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="border-b border-white/10 px-5 py-5">
-          <p className="font-display text-lg font-bold">PHS Admin</p>
-          <p className="text-xs opacity-70">Plant Health Solutions</p>
+        <div className="border-b border-white/10 px-5 py-5 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-xs">
+            <img src="/logo.png" alt="Plant Health Solutions" className="h-full w-full object-contain" />
+          </div>
+          <div>
+            <p className="font-display text-base font-bold">PHS Admin</p>
+            <p className="text-[11px] opacity-75">Plant Health Solutions</p>
+          </div>
         </div>
         <nav className="grid gap-1 p-3">
           {nav.map((n) => {

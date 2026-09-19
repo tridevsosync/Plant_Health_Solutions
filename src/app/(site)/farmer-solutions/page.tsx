@@ -1,161 +1,157 @@
 "use client";
 
 import * as React from "react";
-import { Bug, CalendarDays, Download, Leaf, MessageCircle, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
-import { PageHero } from "@/components/site/Section";
-import { ProductCard } from "@/components/site/ProductCard";
-import { COMPANY, crops } from "@/lib/data";
-import { useApp } from "@/lib/store";
+import Link from "next/link";
+import { Calendar, Leaf, ShieldAlert } from "lucide-react";
 
-export default function FarmerSolutionsPage() {
-  const { state } = useApp();
-  const [active, setActive] = React.useState(crops[0]?.slug ?? "cotton");
-  const crop = crops.find((c) => c.slug === active) ?? crops[0];
-  if (!crop) return null;
-
-  return (
-    <div>
-      <PageHero
-        title="Farmer Solutions"
-        subtitle="Crop-wise disease, pest, nutrition and season guidance from the PHS agronomy team."
-        image="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1920&q=70"
-      />
-
-      <div className="mx-auto max-w-7xl px-4 py-10">
-        <div className="flex flex-wrap gap-2">
-          {crops.map((c) => (
-            <button
-              key={c.slug}
-              onClick={() => setActive(c.slug)}
-              className={`rounded-full px-5 py-2 text-sm font-semibold ${active === c.slug ? "bg-primary text-primary-foreground" : "border border-border bg-card hover:bg-muted"}`}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <h2 className="font-display text-2xl font-bold text-primary">{crop.name} Advisory</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{crop.summary}</p>
-            </div>
-
-            <Panel icon={ShieldAlert} title="Disease Identification & Control">
-              {crop.diseases.map((d) => (
-                <div key={d.name} className="rounded-xl border border-border p-4">
-                  <p className="font-semibold text-foreground">{d.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{d.symptom}</p>
-                  <p className="mt-1 text-sm text-secondary">Control: {d.control}</p>
-                </div>
-              ))}
-            </Panel>
-
-            <Panel icon={Bug} title="Pest Identification & Control">
-              {crop.pests.map((d) => (
-                <div key={d.name} className="rounded-xl border border-border p-4">
-                  <p className="font-semibold text-foreground">{d.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{d.symptom}</p>
-                  <p className="mt-1 text-sm text-secondary">Control: {d.control}</p>
-                </div>
-              ))}
-            </Panel>
-
-            <Panel icon={Leaf} title="Nutrition Management Schedule">
-              {crop.nutrition.map((n) => (
-                <div key={n.stage} className="rounded-xl border border-border p-4">
-                  <p className="font-semibold text-foreground">{n.stage}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{n.schedule}</p>
-                </div>
-              ))}
-            </Panel>
-
-            <Panel icon={CalendarDays} title="Season Calendar">
-              {crop.calendar.map((n) => (
-                <div key={n.month} className="rounded-xl border border-border p-4">
-                  <p className="font-semibold text-foreground">{n.month}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{n.activity}</p>
-                </div>
-              ))}
-            </Panel>
-
-            <div>
-              <h3 className="font-display text-xl font-bold text-primary">Recommended PHS Products</h3>
-              <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                {crop.products.map((id) => {
-                  const p = state.products.find((x) => x.id === id);
-                  return p ? <ProductCard key={id} product={p} /> : null;
-                })}
-              </div>
-            </div>
-          </div>
-
-          <aside className="h-fit space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="font-display text-lg font-semibold">Need a custom schedule?</h3>
-            <p className="text-sm text-muted-foreground">
-              Share your soil report and acreage with our agronomists for a free crop plan.
-            </p>
-            <a
-              href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent(`Hello PHS, I need advisory for my ${crop.name} crop.`)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-full bg-secondary py-2.5 text-sm font-semibold text-secondary-foreground"
-            >
-              <MessageCircle className="h-4 w-4" /> WhatsApp Agronomist
-            </a>
-            <button
-              onClick={() => {
-                const text = [
-                  `${crop.name} Advisory — Plant Health Solutions Pvt. Ltd.`,
-                  crop.summary,
-                  "",
-                  "Diseases:",
-                  ...crop.diseases.map((d) => `- ${d.name}: ${d.control}`),
-                  "",
-                  "Pests:",
-                  ...crop.pests.map((d) => `- ${d.name}: ${d.control}`),
-                  "",
-                  "Nutrition:",
-                  ...crop.nutrition.map((n) => `- ${n.stage}: ${n.schedule}`),
-                  "",
-                  `Contact: ${COMPANY.phone} | ${COMPANY.email1}`,
-                ].join("\n");
-                const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${crop.slug}-advisory.txt`;
-                a.click();
-                URL.revokeObjectURL(url);
-                toast.success("Advisory downloaded");
-              }}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-border py-2.5 text-sm font-semibold"
-            >
-              <Download className="h-4 w-4" /> Download Advisory
-            </button>
-            <p className="text-xs text-muted-foreground">Helpline: {state.settings.phone}</p>
-          </aside>
-        </div>
-      </div>
-    </div>
-  );
+interface CropSolution {
+  name: string;
+  season: string;
+  image: string;
+  diseases: string[];
+  products: string[];
 }
 
-function Panel({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  children: React.ReactNode;
-}) {
+const cropSolutions: CropSolution[] = [
+  {
+    name: "Cotton",
+    season: "Kharif (June-October)",
+    image: "https://images.unsplash.com/photo-1594897030561-681c953531db?auto=format&fit=crop&w=1200&q=80",
+    diseases: ["Bollworm", "Whitefly", "Leaf curl virus"],
+    products: ["GreenGold Hybrid Cotton Seeds", "ProtectMax Imidacloprid", "MicroMix Plus"],
+  },
+  {
+    name: "Sugarcane",
+    season: "Year-round, peak Feb-March",
+    image: "https://images.unsplash.com/photo-1611735341450-74d61e660ad2?auto=format&fit=crop&w=1200&q=80",
+    diseases: ["Red rot", "Smut", "Borer complex"],
+    products: ["AgriPro Sugarcane Setts", "Potash Power MOP", "BioShield Trichoderma"],
+  },
+  {
+    name: "Wheat",
+    season: "Rabi (Nov-April)",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=1200&q=80",
+    diseases: ["Rust", "Karnal bunt", "Loose smut"],
+    products: ["GoldenGrain Wheat Seeds", "GreenBoost Urea", "FungiKill Mancozeb"],
+  },
+  {
+    name: "Maize",
+    season: "Kharif & Rabi",
+    image: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=1200&q=80",
+    diseases: ["Fall armyworm", "Turcicum leaf blight"],
+    products: ["HarvestPlus Maize Hybrid", "CropGuard Chlorpyrifos"],
+  },
+  {
+    name: "Grapes",
+    season: "Pruning Apr & Oct",
+    image: "https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=1200&q=80",
+    diseases: ["Downy mildew", "Powdery mildew", "Anthracnose"],
+    products: ["BlightShield Copper Oxychloride", "GrowMore GA3", "SeaWeed Extract"],
+  },
+  {
+    name: "Pomegranate",
+    season: "Hasta bahar / Mrig bahar",
+    image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=1200&q=80",
+    diseases: ["Bacterial blight", "Wilt", "Fruit borer"],
+    products: ["AgriCal Calcium Nitrate", "BioShield Trichoderma", "Amino Power"],
+  },
+  {
+    name: "Vegetables",
+    season: "Year-round",
+    image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80",
+    diseases: ["TYLCV", "Damping off", "Aphids"],
+    products: ["FreshFarm Tomato Seeds F1", "Verticillium Bio-Insecticide", "Organic Vermicompost"],
+  },
+];
+
+export default function FarmerSolutionsPage() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-      <h3 className="flex items-center gap-2 font-display text-xl font-semibold text-primary">
-        <Icon className="h-5 w-5 text-secondary" /> {title}
-      </h3>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">{children}</div>
+    <div>
+      {/* Hero Section */}
+      <section className="relative isolate overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1920&q=80"
+          alt="Farmer Solutions Knowledge Center"
+          className="absolute inset-0 -z-10 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#122b17]/95 via-[#183a1f]/90 to-[#285724]/80 backdrop-blur-[0.5px]" />
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-24 lg:px-8">
+          <h1 className="max-w-3xl font-display text-4xl font-bold md:text-5xl leading-tight text-white">
+            Farmer Solutions Knowledge Center
+          </h1>
+          <p className="mt-4 max-w-2xl text-base text-white/85 md:text-lg">
+            Crop-wise disease management, fertilizer guides and seasonal calendars.
+          </p>
+        </div>
+      </section>
+
+      {/* Crop Solutions Cards */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+        <div className="space-y-8">
+          {cropSolutions.map((crop) => (
+            <div
+              key={crop.name}
+              className="grid gap-6 overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md md:grid-cols-[260px_1fr]"
+            >
+              {/* Crop Image */}
+              <div className="aspect-[4/3] md:aspect-auto overflow-hidden bg-muted">
+                <img
+                  alt={crop.name}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                  src={crop.image}
+                />
+              </div>
+
+              {/* Crop Content */}
+              <div className="p-6">
+                <h2 className="font-display text-2xl font-bold text-primary">{crop.name}</h2>
+                <p className="mt-1 inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5 text-secondary" />
+                  {crop.season}
+                </p>
+
+                <div className="mt-5 grid gap-6 md:grid-cols-2">
+                  {/* Common Diseases & Pests */}
+                  <div>
+                    <div className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <ShieldAlert className="h-4 w-4 text-destructive" />
+                      Common diseases &amp; pests
+                    </div>
+                    <ul className="space-y-1.5 text-sm text-muted-foreground">
+                      {crop.diseases.map((disease) => (
+                        <li key={disease} className="flex items-center gap-1.5">
+                          <span className="text-destructive/70">•</span> {disease}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Recommended Products */}
+                  <div>
+                    <div className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Leaf className="h-4 w-4 text-secondary" />
+                      Recommended products
+                    </div>
+                    <ul className="space-y-1.5 text-sm text-muted-foreground">
+                      {crop.products.map((product) => (
+                        <li key={product}>
+                          <Link
+                            href={`/products?q=${encodeURIComponent(product.split(" ")[0])}`}
+                            className="hover:text-secondary transition-colors"
+                          >
+                            • {product}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

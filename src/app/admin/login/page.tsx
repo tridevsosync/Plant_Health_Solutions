@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Leaf } from "lucide-react";
+import { Lock, Mail, Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/lib/store";
 import { inputCls } from "@/components/site/AdminUI";
@@ -11,6 +11,7 @@ export default function AdminLoginPage() {
   const { adminLogin, state, ready } = useApp();
   const router = useRouter();
   const [form, setForm] = React.useState({ user: "", pass: "" });
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     if (ready && state.admin) {
@@ -18,47 +19,104 @@ export default function AdminLoginPage() {
     }
   }, [ready, state.admin, router]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.user.trim() || !form.pass) {
+      toast.error("Please enter both username/email and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const ok = await adminLogin(form.user.trim(), form.pass);
+      if (ok) {
+        toast.success("Welcome back, Dr. R. M. Kulkarni / Administrator");
+        router.replace("/admin");
+      } else {
+        toast.error("Invalid admin credentials. Please check your username and password.");
+      }
+    } catch {
+      toast.error("An error occurred during authentication.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-primary px-4">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (adminLogin(form.user.trim(), form.pass)) {
-            toast.success("Welcome back, admin");
-            router.replace("/admin");
-          } else {
-            toast.error("Invalid admin credentials");
-          }
-        }}
-        className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl"
-      >
-        <div className="mb-5 flex items-center gap-2">
-          <span className="rounded-full bg-primary p-2 text-primary-foreground">
-            <Leaf className="h-5 w-5" />
-          </span>
+    <div className="flex min-h-screen items-center justify-center bg-[#18361e] px-4 py-12">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-card p-8 shadow-2xl">
+        <div className="mb-6 flex items-center gap-4 border-b border-border pb-6">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-sm border border-border">
+            <img src="/logo.png" alt="Plant Health Solutions" className="h-full w-full object-contain" />
+          </div>
           <div>
-            <p className="font-display text-lg font-bold text-foreground">PHS Admin</p>
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-primary">
+              Management Portal
+            </span>
+            <p className="font-display text-xl font-bold text-foreground">PHS Admin Panel</p>
             <p className="text-xs text-muted-foreground">Plant Health Solutions Pvt. Ltd.</p>
           </div>
         </div>
-        <div className="grid gap-3">
-          <input
-            className={inputCls}
-            placeholder="Username"
-            value={form.user}
-            onChange={(e) => setForm({ ...form, user: e.target.value })}
-          />
-          <input
-            className={inputCls}
-            type="password"
-            placeholder="Password"
-            value={form.pass}
-            onChange={(e) => setForm({ ...form, pass: e.target.value })}
-          />
-          <button className="rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground">Sign In</button>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Admin Username / Email
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+              <input
+                className={`${inputCls} pl-10`}
+                placeholder="planthealth@gmail.com or admin"
+                value={form.user}
+                onChange={(e) => setForm({ ...form, user: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+              <input
+                className={`${inputCls} pl-10`}
+                type="password"
+                placeholder="••••••••••••"
+                value={form.pass}
+                onChange={(e) => setForm({ ...form, pass: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground shadow-lg hover:opacity-95 transition-all disabled:opacity-50"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                Sign In to Dashboard <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </form>
+
+        <div className="mt-6 rounded-2xl bg-muted/50 p-4 border border-border text-center">
+          <p className="text-xs font-medium text-foreground">Credentials configured in system:</p>
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            planthealth@gmail.com / Planthealth@123
+          </p>
+          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/80">
+            or quick demo: admin / admin123
+          </p>
         </div>
-        <p className="mt-4 text-center text-xs text-muted-foreground">Demo credentials: admin / admin123</p>
-      </form>
+      </div>
     </div>
   );
 }

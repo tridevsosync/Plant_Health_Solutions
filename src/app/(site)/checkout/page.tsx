@@ -5,15 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FREE_SHIPPING, SHIPPING_FEE, inr, useApp, useCartTotals, useUser } from "@/lib/store";
+import { PageHero } from "@/components/site/Section";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { state, set, clearCart } = useApp();
+  const { state, createOrder } = useApp();
   const user = useUser();
   const { lines, subtotal } = useCartTotals();
   const [step, setStep] = React.useState(1);
   const [payment, setPayment] = React.useState("UPI");
   const [coupon, setCoupon] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
   const [addr, setAddr] = React.useState({
     name: user?.name ?? "",
     phone: user?.phone ?? "",
@@ -40,7 +42,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (!addr.name || !addr.phone || !addr.line || !addr.city || !addr.pincode) {
       toast.error("Please complete the delivery address");
       setStep(1);
@@ -50,47 +52,63 @@ export default function CheckoutPage() {
     const items = lines
       .filter((l) => l.product)
       .map((l) => ({ id: l.line.id, name: l.product!.name, price: l.product!.price, qty: l.line.qty }));
-    set((s) => ({
-      ...s,
-      orders: [
-        {
-          id,
-          customer: addr.name,
-          email: addr.email,
-          phone: addr.phone,
-          date: new Date().toISOString().slice(0, 10),
-          status: "Pending" as const,
-          items,
-          subtotal,
-          discount,
-          shipping,
-          tax,
-          total,
-          address: `${addr.line}, ${addr.city} - ${addr.pincode}`,
-          payment,
-        },
-        ...s.orders,
-      ],
-    }));
-    clearCart();
-    toast.success("Order placed successfully");
-    router.push(`/orders/${id}`);
+
+    setSubmitting(true);
+    const result = await createOrder({
+      id,
+      customer: addr.name,
+      email: addr.email || user?.email || "customer@farm.com",
+      phone: addr.phone,
+      date: new Date().toISOString().slice(0, 10),
+      status: "Pending",
+      items,
+      subtotal,
+      discount,
+      shipping,
+      tax,
+      total,
+      address: `${addr.line}, ${addr.city} - ${addr.pincode}`,
+      payment,
+    });
+    setSubmitting(false);
+
+    if (result.success && result.order) {
+      toast.success("Order placed successfully!");
+      router.push(`/orders/${result.order.id}`);
+    } else {
+      toast.error(result.error || "Failed to place order. Please try again.");
+    }
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
-      <h1 className="font-display text-3xl font-bold text-primary">Checkout</h1>
-      <div className="mt-4 flex gap-2 text-sm">
-        {["Delivery Address", "Payment", "Review"].map((s, i) => (
-          <button
-            key={s}
-            onClick={() => setStep(i + 1)}
-            className={`rounded-full px-4 py-1.5 ${step === i + 1 ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}
-          >
-            {i + 1}. {s}
-          </button>
-        ))}
-      </div>
+    <div>
+      <PageHero
+        title="Secure Checkout"
+        subtitle="Provide your shipping details and choose your preferred payment option."
+        image="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=1920&q=80"
+      />
+      <div className="mx-auto max-w-7xl px-4 py-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+          <div>
+            <h2 className="font-display text-2xl font-bold text-primary">Checkout Steps</h2>
+            <p className="text-sm text-muted-foreground">Complete all steps to place your order</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            {["Delivery Address", "Payment", "Review"].map((s, i) => (
+              <button
+                key={s}
+                onClick={() => setStep(i + 1)}
+                className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
+                  step === i + 1
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border bg-card hover:bg-muted"
+                }`}
+              >
+                {i + 1}. {s}
+              </button>
+            ))}
+          </div>
+        </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -161,8 +179,12 @@ export default function CheckoutPage() {
                   ) : null,
                 )}
               </ul>
-              <button onClick={placeOrder} className="mt-6 rounded-full bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground">
-                Place Order
+              <button
+                onClick={placeOrder}
+                disabled={submitting}
+                className="mt-6 rounded-full bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50"
+              >
+                {submitting ? "Placing Order..." : "Place Order"}
               </button>
             </div>
           )}
@@ -190,6 +212,7 @@ export default function CheckoutPage() {
           </dl>
         </aside>
       </div>
+    </div>
     </div>
   );
 }

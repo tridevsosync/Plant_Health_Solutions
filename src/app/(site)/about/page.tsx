@@ -1,187 +1,265 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import { Award, CheckCircle2, FlaskConical, Leaf, Recycle, Target, Users } from "lucide-react";
-import { PageHero, Section } from "@/components/site/Section";
-import { stats } from "@/lib/data";
-import { useApp } from "@/lib/store";
-
-const timeline = [
-  ["Problem Identification", "Field surveys and farmer interviews across Karnataka and Maharashtra identify the constraint."],
-  ["Laboratory Formulation", "Strain selection, compatibility testing and shelf-life studies in our QC laboratory."],
-  ["Green House Screening", "Pot culture trials measure germination, root biomass and nutrient uptake."],
-  ["Multi-Location Field Trials", "Replicated demonstrations for three seasons across soil types."],
-  ["Commercial Manufacturing", "Batch production with CFU and purity verification for every lot."],
-  ["Farmer Extension", "Field officers convert products into crop-wise schedules and monitor results."],
-];
-
-const values = [
-  { icon: Leaf, title: "Sustainability", text: "Biological first — reduce chemical load without compromising yield." },
-  { icon: Target, title: "Farmer Outcome", text: "We measure success in quintals per acre and rupees saved." },
-  { icon: FlaskConical, title: "Scientific Rigour", text: "No claim leaves our office without replicated trial data behind it." },
-  { icon: Users, title: "Accessibility", text: "Advisory is free, in the local language, and delivered on the farm." },
-];
+import { Award, Eye, Target, Users } from "lucide-react";
 
 export default function AboutPage() {
-  const { state } = useApp();
-  const s = state.settings;
-
   return (
     <div>
-      <PageHero
-        title="About Plant Health Solutions"
-        subtitle={`${s.name} — research, manufacturing and extension for sustainable Indian agriculture.`}
-        image="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1920&q=70"
-      />
-
-      <Section>
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-secondary">Our Story</span>
-            <h2 className="mt-2 font-display text-3xl font-bold text-primary">Built on the Black Soils of Vijayapura</h2>
-            <p className="mt-4 text-muted-foreground">
-              {s.name} began as a small soil testing and advisory unit serving farmers around Tidagundi. Repeated
-              observations of micronutrient deficiency, declining organic carbon and rising input cost pushed the team
-              to start manufacturing biological inputs in-house rather than only recommending them.
-            </p>
-            <p className="mt-4 text-muted-foreground">
-              Today the Horticulture Research and Extension Center on NH-52 houses a microbiology laboratory, a
-              fermentation and blending plant, a packaging line and demonstration plots for cotton, sugarcane, paddy,
-              pulses, vegetables and orchard crops.
-            </p>
-            <p className="mt-4 text-muted-foreground">{s.description}</p>
-          </div>
-          <img
-            src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=1200&q=70"
-            alt="Research center field"
-            className="h-96 w-full rounded-2xl object-cover shadow"
-          />
-        </div>
-      </Section>
-
-      <Section muted>
-        <div className="grid items-center gap-10 rounded-2xl bg-card p-8 shadow-sm lg:grid-cols-3">
-          <img
-            src="https://images.unsplash.com/photo-1582560475093-ba66accbc424?w=800&q=70"
-            alt="Leadership"
-            className="h-64 w-full rounded-xl object-cover"
-          />
-          <div className="lg:col-span-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-secondary">Leadership</span>
-            <h2 className="mt-2 font-display text-3xl font-bold text-primary">{s.owner}</h2>
-            <p className="mt-1 text-sm font-medium text-secondary">Founder & Managing Director</p>
-            <p className="mt-4 text-muted-foreground">
-              {s.owner} has spent close to two decades in horticulture research and farmer extension in North
-              Karnataka. He leads product development at the Tidagundi center, personally reviews every trial data set
-              and conducts monthly farmer training camps on soil health, integrated nutrient management and residue
-              free production.
-            </p>
-            <p className="mt-4 text-muted-foreground">
-              Under his direction the company has grown into a full-range manufacturer of bio fertilizers,
-              biostimulants, bio control agents, organic manures, water soluble fertilizers and micronutrients.
-            </p>
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Research Center & Manufacturing" kicker="Tidagundi, Vijayapura">
-        <div className="grid gap-5 md:grid-cols-3">
-          {[
-            ["Microbiology Laboratory", "Strain isolation, CFU counting, contamination checks and shelf life studies."],
-            ["Fermentation & Blending", "Liquid and carrier based bio fertilizer production with controlled batches."],
-            ["Quality Control", "Every lot tested for purity, pH, moisture, nutrient content and heavy metals."],
-            ["Demonstration Plots", "Live crop plots showcasing PHS schedules against farmer practice."],
-            ["Soil & Water Testing", "Free soil report interpretation for farmers visiting the center."],
-            ["Training Hall", "Monthly extension programmes during Kharif and Rabi seasons."],
-          ].map(([t, d]) => (
-            <div key={t} className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <CheckCircle2 className="h-5 w-5 text-secondary" />
-              <h3 className="mt-3 font-display text-lg font-semibold">{t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{d}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Our Research Process" kicker="From Lab to Land" muted>
-        <ol className="relative mx-auto max-w-3xl border-l-2 border-accent pl-6">
-          {timeline.map(([t, d], i) => (
-            <li key={t} className="mb-8">
-              <span className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                {i + 1}
-              </span>
-              <h3 className="font-display text-lg font-semibold text-primary">{t}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{d}</p>
-            </li>
-          ))}
-        </ol>
-      </Section>
-
-      <Section title="Sustainability Commitment" kicker="Green by Design">
-        <div className="grid gap-5 md:grid-cols-3">
-          {[
-            ["Soil Carbon Restoration", "Organic manure and microbial programmes that rebuild organic carbon."],
-            ["Reduced Chemical Load", "Bio control agents and botanicals for residue free, export ready produce."],
-            ["Water Use Efficiency", "Drip-compatible soluble grades that cut both water and fertilizer waste."],
-          ].map(([t, d]) => (
-            <div key={t} className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <Recycle className="h-5 w-5 text-secondary" />
-              <h3 className="mt-3 font-display text-lg font-semibold">{t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{d}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Our Values" kicker="What Guides Us" muted>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {values.map((v) => (
-            <div key={v.title} className="rounded-xl border border-border bg-card p-6 text-center shadow-sm">
-              <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-accent/40 text-primary">
-                <v.icon className="h-5 w-5" />
-              </span>
-              <h3 className="mt-3 font-display text-lg font-semibold">{v.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{v.text}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Certifications & Recognition" kicker="Quality Credentials">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {["ISO 9001:2015 Manufacturing", "Fertilizer Control Order Licence", "Organic Input Approval", "State Agriculture Dept. Registered"].map(
-            (c) => (
-              <div key={c} className="flex items-center gap-3 rounded-xl border border-border bg-card p-5 shadow-sm">
-                <Award className="h-6 w-6 shrink-0 text-secondary" />
-                <p className="text-sm font-medium">{c}</p>
-              </div>
-            ),
-          )}
-        </div>
-        <div className="mt-10 grid gap-4 rounded-2xl bg-primary p-8 text-primary-foreground sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((st) => (
-            <div key={st.label} className="text-center">
-              <p className="font-display text-3xl font-bold text-accent">{st.value}</p>
-              <p className="mt-1 text-sm text-primary-foreground/80">{st.label}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <section className="pb-16">
-        <div className="mx-auto max-w-5xl rounded-2xl bg-secondary px-8 py-12 text-center text-secondary-foreground">
-          <h2 className="font-display text-3xl font-bold">Talk to our agronomists</h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-white/90">
-            Share your soil report and cropping plan — we will build a season-long nutrition and protection schedule
-            for your farm free of cost.
+      {/* Hero Section */}
+      <section className="relative isolate overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1920&q=80"
+          alt="Agriculture Research Field"
+          className="absolute inset-0 -z-10 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#122b17]/95 via-[#183a1f]/90 to-[#285724]/80 backdrop-blur-[0.5px]" />
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
+          <h1 className="max-w-3xl font-display text-4xl font-bold md:text-5xl leading-tight text-white">
+            Rooted in research. Built for the Indian farm.
+          </h1>
+          <p className="mt-4 max-w-2xl text-base text-white/85 md:text-lg">
+            For over two decades, Plant Health Solutions has worked alongside Indian farmers to
+            deliver inputs that perform in the field.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/contact" className="rounded-full bg-white px-7 py-3 text-sm font-semibold text-primary">
+        </div>
+      </section>
+
+      {/* Company History */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+        <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
+          <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+            Company History
+          </span>
+          <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
+            From a small lab in Vijayapura to 12 states
+          </h2>
+        </div>
+
+        <div className="grid gap-10 md:grid-cols-2 md:items-center">
+          <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <p>
+              Founded in 2003 with a single fermentation chamber, Plant Health Solutions began with
+              the simple ambition of putting bio-pesticide tools in the hands of cotton farmers in
+              North Karnataka.
+            </p>
+            <p>
+              Today, our Horticulture Research &amp; Extension Center on NH-52 spans 40 acres and
+              houses formulation labs, a tissue-culture unit and demonstration plots covering
+              cotton, sugarcane, grapes, pomegranate and vegetables.
+            </p>
+            <p>
+              Our products reach over 50,000 farmers through a 300+ strong dealer network across
+              Karnataka, Maharashtra, Andhra Pradesh, Telangana, Madhya Pradesh and beyond.
+            </p>
+          </div>
+
+          <div className="aspect-[5/4] overflow-hidden rounded-2xl border border-border shadow-md">
+            <img
+              alt="Company history and research field"
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+              src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=1200&q=80"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Mission & Vision */}
+      <div className="bg-muted/40 border-y border-border/60">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Mission */}
+            <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+              <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground">
+                <Target className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 font-display text-2xl font-bold text-primary">Our Mission</h3>
+              <p className="mt-3 text-muted-foreground leading-relaxed">
+                To empower the Indian farmer with research-validated agricultural inputs that increase
+                yield while reducing chemical load on soil and water.
+              </p>
+            </div>
+
+            {/* Vision */}
+            <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+              <span className="grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-foreground">
+                <Eye className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 font-display text-2xl font-bold text-primary">Our Vision</h3>
+              <p className="mt-3 text-muted-foreground leading-relaxed">
+                To be India&apos;s most trusted partner for sustainable, science-led crop nutrition
+                and protection by 2030.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Manufacturing & Research Facilities */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+        <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
+          <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+            Manufacturing &amp; Research
+          </span>
+          <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
+            State-of-the-art facilities
+          </h2>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Facility 1 */}
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <img
+              alt="Manufacturing Facility"
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover"
+              src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=1200&q=80"
+            />
+            <div className="p-6">
+              <h3 className="font-display text-xl font-bold text-primary">
+                Manufacturing Facility
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                ISO 9001:2015 certified plant with dedicated lines for liquid, granular and
+                seed-treatment formulations. Annual capacity 12,000 MT.
+              </p>
+            </div>
+          </div>
+
+          {/* Facility 2 */}
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <img
+              alt="Research Center"
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover"
+              src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80"
+            />
+            <div className="p-6">
+              <h3 className="font-display text-xl font-bold text-primary">Research Center</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Soil &amp; water laboratory, tissue-culture unit, fermentation chambers and 40 acres
+                of multi-crop trial plots.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Certifications */}
+      <div className="bg-muted/40 border-y border-border/60">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+          <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
+            <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+              Certifications
+            </span>
+            <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
+              Trusted, audited, certified
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+              <Award className="mx-auto h-8 w-8 text-secondary" />
+              <div className="mt-3 text-sm font-semibold text-foreground">ISO 9001:2015</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+              <Award className="mx-auto h-8 w-8 text-secondary" />
+              <div className="mt-3 text-sm font-semibold text-foreground">CIB&amp;RC Registered</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+              <Award className="mx-auto h-8 w-8 text-secondary" />
+              <div className="mt-3 text-sm font-semibold text-foreground">FCO Licensed</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+              <Award className="mx-auto h-8 w-8 text-secondary" />
+              <div className="mt-3 text-sm font-semibold text-foreground">NPOP Organic</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Leadership / Team */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+        <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
+          <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+            Leadership
+          </span>
+          <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
+            Meet our team
+          </h2>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-4">
+          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
+              <Users className="h-8 w-8" />
+            </div>
+            <div className="mt-4 font-display text-lg font-bold text-primary">
+              Dr. R. M. Kulkarni
+            </div>
+            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+              Founder &amp; Chief Agronomist
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
+              <Users className="h-8 w-8" />
+            </div>
+            <div className="mt-4 font-display text-lg font-bold text-primary">
+              Mrs. S. Patil
+            </div>
+            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+              Managing Director
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
+              <Users className="h-8 w-8" />
+            </div>
+            <div className="mt-4 font-display text-lg font-bold text-primary">
+              Dr. M. Hegde
+            </div>
+            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+              Head of Research
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
+              <Users className="h-8 w-8" />
+            </div>
+            <div className="mt-4 font-display text-lg font-bold text-primary">
+              Mr. A. Deshmukh
+            </div>
+            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+              VP Operations
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl rounded-3xl bg-secondary px-8 py-12 text-center text-white shadow-lg">
+          <h2 className="font-display text-3xl font-bold">Talk to our agronomists</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-white/90 leading-relaxed">
+            Share your soil report and cropping plan — we will build a season-long nutrition and
+            protection schedule for your farm free of cost.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/contact"
+              className="rounded-full bg-white px-7 py-3 text-sm font-semibold text-primary transition hover:bg-white/90"
+            >
               Contact Us
             </Link>
             <Link
               href="/products"
-              className="rounded-full border border-white px-7 py-3 text-sm font-semibold text-white"
+              className="rounded-full border border-white/60 px-7 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               Browse Products
             </Link>

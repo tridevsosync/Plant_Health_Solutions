@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Minus, Plus, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { FREE_SHIPPING, SHIPPING_FEE, inr, useApp, useCartTotals } from "@/lib/store";
+import { PageHero } from "@/components/site/Section";
 
 export default function CartPage() {
   const { state, setQty, removeFromCart } = useApp();
@@ -19,22 +20,34 @@ export default function CartPage() {
 
   if (lines.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-24 text-center">
-        <h1 className="font-display text-3xl font-bold text-primary">Your cart is empty</h1>
-        <p className="mt-2 text-muted-foreground">Add bio fertilizers, micronutrients or crop protection products.</p>
-        <Link
-          href="/products"
-          className="mt-6 inline-block rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground"
-        >
-          Browse products
-        </Link>
+      <div>
+        <PageHero
+          title="Your Shopping Cart"
+          subtitle="Review and manage your selected bio fertilizers, micronutrients, and crop care formulations."
+          image="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=1920&q=80"
+        />
+        <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+          <h2 className="font-display text-2xl font-bold text-primary">Your cart is currently empty</h2>
+          <p className="mt-2 text-muted-foreground">Add bio fertilizers, micronutrients or crop protection products to get started.</p>
+          <Link
+            href="/products"
+            className="mt-6 inline-block rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground hover:bg-secondary transition-colors"
+          >
+            Browse products
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
-      <h1 className="font-display text-3xl font-bold text-primary">Shopping Cart</h1>
+    <div>
+      <PageHero
+        title="Your Shopping Cart"
+        subtitle="Review and manage your selected bio fertilizers, micronutrients, and crop care formulations."
+        image="https://images.unsplash.com/photo-1586771107445-d3ca888129ff?auto=format&fit=crop&w=1920&q=80"
+      />
+      <div className="mx-auto max-w-7xl px-4 py-12">
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
@@ -129,6 +142,7 @@ export default function CartPage() {
           <p className="mt-3 text-center text-xs text-muted-foreground">Available coupons: {state.coupons.map((c) => c.code).join(", ")}</p>
         </aside>
       </div>
+    </div>
     </div>
   );
 }

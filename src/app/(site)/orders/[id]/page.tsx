@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CheckCircle2, Printer } from "lucide-react";
 import { inr, useApp } from "@/lib/store";
+import { PageHero } from "@/components/site/Section";
 
 const steps = ["Order Placed", "Processing", "Shipped", "Out for Delivery", "Delivered"];
 
@@ -26,7 +27,13 @@ export default function OrderInvoicePage() {
     order.status === "Delivered" ? 5 : order.status === "Cancelled" ? 1 : order.status === "Shipped" ? 3 : order.status === "Processing" ? 2 : 1;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
+    <div>
+      <PageHero
+        title="Order Invoice & Tracking"
+        subtitle={`Tracking details and tax invoice for Order #${order.id}`}
+        image="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1920&q=80"
+      />
+      <div className="mx-auto max-w-4xl px-4 py-12">
       <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
         <CheckCircle2 className="mx-auto h-12 w-12 text-secondary" />
         <h1 className="mt-3 font-display text-3xl font-bold text-primary">Thank you for your order!</h1>
@@ -103,6 +110,7 @@ export default function OrderInvoicePage() {
           <Printer className="h-4 w-4" /> Print / Download Invoice
         </button>
       </div>
+    </div>
     </div>
   );
 }
