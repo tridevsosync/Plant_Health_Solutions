@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin/enquiries")({
       { property: "og:description", content: "Lead inbox." },
     ],
   }),
-  component: AdminEnquiries;
+  component: AdminEnquiries,
 });
 
 function AdminEnquiries() {
