@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { CategoryModel } from "@/models/Category";
+
+function buildCategoryQuery(rawId: string) {
+  const decoded = decodeURIComponent(rawId).trim();
+  const isObjectId = mongoose.Types.ObjectId.isValid(decoded) && /^[0-9a-fA-F]{24}$/.test(decoded);
+  if (isObjectId) {
+    return { $or: [{ id: decoded }, { _id: decoded }, { slug: decoded }, { name: decoded }] };
+  }
+  return { $or: [{ id: decoded }, { slug: decoded }, { name: decoded }] };
+}
 
 export async function PUT(
   req: NextRequest,
@@ -15,8 +25,9 @@ export async function PUT(
       body.slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     }
 
+    const query = buildCategoryQuery(id);
     const updated = await CategoryModel.findOneAndUpdate(
-      { id },
+      query,
       { $set: body },
       { new: true }
     );
@@ -39,15 +50,14 @@ export async function DELETE(
   try {
     await connectDB();
     const { id } = await params;
-    const deleted = await CategoryModel.findOneAndDelete({ id });
+    const query = buildCategoryQuery(id);
+    const result = await CategoryModel.deleteMany(query);
 
-    if (!deleted) {
-      return NextResponse.json({ success: false, error: "Category not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, message: "Category deleted successfully" });
+    return NextResponse.json({ success: true, message: "Category deleted successfully", deletedCount: result.deletedCount });
   } catch (error: unknown) {
+    console.warn("Category DELETE error:", (error as Error).message);
     const errMessage = error instanceof Error ? error.message : "Failed to delete category";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
   }
 }
+

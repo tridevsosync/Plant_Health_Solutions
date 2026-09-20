@@ -76,7 +76,7 @@ export function ImageUploader({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full min-w-0">
       <div className="flex items-center justify-between">
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
@@ -95,7 +95,7 @@ export function ImageUploader({
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-all duration-200 ${
+        className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 transition-all duration-200 min-w-0 w-full overflow-hidden ${
           dragOver
             ? "border-primary bg-primary/5"
             : "border-border/80 bg-muted/20 hover:border-primary/50"
@@ -110,29 +110,31 @@ export function ImageUploader({
         />
 
         {value ? (
-          <div className="relative group w-full flex items-center gap-4">
-            <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="relative group w-full flex flex-col sm:flex-row items-center gap-3 sm:gap-4 min-w-0">
+            <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
               <img
                 src={value}
                 alt="Uploaded preview"
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="truncate text-xs font-mono text-muted-foreground">{value}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
+            <div className="flex-1 min-w-0 w-full text-center sm:text-left">
+              <p className="truncate text-xs font-mono text-muted-foreground bg-muted/50 p-1.5 rounded-lg border border-border/50 select-all">
+                {value}
+              </p>
+              <div className="mt-2.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/20"
+                  className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
                 >
                   Change Image
                 </button>
                 <button
                   type="button"
                   onClick={() => onChange("")}
-                  className="rounded-lg bg-destructive/10 px-3 py-1 text-xs font-semibold text-destructive hover:bg-destructive/20"
+                  className="rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-colors"
                 >
                   Remove
                 </button>
@@ -142,7 +144,7 @@ export function ImageUploader({
         ) : (
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center py-4 cursor-pointer text-center"
+            className="flex flex-col items-center justify-center py-4 cursor-pointer text-center w-full min-w-0"
           >
             {uploading ? (
               <div className="flex flex-col items-center gap-2">
@@ -168,13 +170,13 @@ export function ImageUploader({
         )}
       </div>
 
-      <div className="flex items-center gap-2 pt-1">
+      <div className="pt-0.5 w-full min-w-0">
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Or paste external image URL..."
-          className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full min-w-0 rounded-xl border border-border bg-background px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>

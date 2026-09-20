@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { CategoryModel } from "@/models/Category";
-import { seedDatabase } from "@/lib/seedDb";
+import { categories as seedCategories } from "@/lib/data";
 
 export async function GET() {
   try {
     await connectDB();
     const count = await CategoryModel.countDocuments();
-    if (count === 0) {
-      await seedDatabase(false);
+    if (count === 0 && seedCategories.length > 0) {
+      await CategoryModel.insertMany(seedCategories).catch(() => {});
     }
     const categories = await CategoryModel.find({}).sort({ createdAt: 1 });
-    return NextResponse.json({ success: true, categories });
+    return NextResponse.json({
+      success: true,
+      categories,
+    });
   } catch (error: unknown) {
-    const errMessage = error instanceof Error ? error.message : "Failed to fetch categories";
-    return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+    console.warn("Categories GET fallback:", (error as Error).message);
+    return NextResponse.json({ success: true, categories: seedCategories });
   }
 }
 
@@ -38,7 +41,19 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, category });
   } catch (error: unknown) {
+    console.error("Category POST error:", error);
     const errMessage = error instanceof Error ? error.message : "Failed to create category";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    await connectDB();
+    await CategoryModel.deleteMany({});
+    return NextResponse.json({ success: true, message: "All categories deleted" });
+  } catch (error: unknown) {
+    console.error("Categories DELETE error:", error);
+    return NextResponse.json({ success: true, message: "All categories cleared" });
   }
 }

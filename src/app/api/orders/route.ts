@@ -2,22 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { OrderModel } from "@/models/Order";
 import { CustomerModel } from "@/models/Customer";
-import { seedDatabase } from "@/lib/seedDb";
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    const count = await OrderModel.countDocuments();
-    if (count === 0) {
-      await seedDatabase(false);
-    }
-
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
     const query: Record<string, unknown> = {};
     if (email) query.email = email.toLowerCase();
 
-    const orders = await OrderModel.find(query).sort({ createdAt: -1 });
+    const orders = await OrderModel.find(query).sort({ createdAt: -1 }).lean();
     return NextResponse.json({ success: true, orders });
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : "Failed to fetch orders";
@@ -37,14 +31,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const id = body.id || `PHS-${Date.now().toString().slice(-6)}`;
+    const id = body.id || `PHS-2026-${Math.floor(2000 + Math.random() * 7999)}`;
     const date = body.date || new Date().toISOString().split("T")[0];
+    const trackingNumber =
+      body.trackingNumber || `PHS-TRK-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const isOnlinePaid =
+      body.payment?.toLowerCase().includes("razorpay") ||
+      body.payment?.toLowerCase().includes("upi") ||
+      body.payment?.toLowerCase().includes("paid");
+
+    const paymentStatus = body.paymentStatus || (isOnlinePaid ? "Paid" : "Pending");
 
     const order = await OrderModel.create({
       ...body,
       id,
       date,
       status: body.status || "Pending",
+      trackingNumber,
+      courier: body.courier || "VRL Logistics / DTDC Express",
+      estimatedDelivery: body.estimatedDelivery || "3 - 5 business days",
+      paymentStatus,
     });
 
     // Update or create customer
@@ -77,6 +84,21 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     console.error("Order POST error:", error);
     const errMessage = error instanceof Error ? error.message : "Failed to place order";
+    return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    await connectDB();
+    const result = await OrderModel.deleteMany({});
+    return NextResponse.json({
+      success: true,
+      message: "All orders deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : "Failed to delete all orders";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
   }
 }

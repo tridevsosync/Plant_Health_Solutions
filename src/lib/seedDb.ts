@@ -31,16 +31,20 @@ export async function seedDatabase(force = false) {
   const catCount = await CategoryModel.countDocuments();
   if (catCount === 0 || force) {
     if (force) await CategoryModel.deleteMany({});
-    await CategoryModel.insertMany(seedCategories);
-    console.log(`Seeded ${seedCategories.length} categories`);
+    if (seedCategories.length > 0) {
+      await CategoryModel.insertMany(seedCategories);
+      console.log(`Seeded ${seedCategories.length} categories${force ? ' (forced)' : ''}`);
+    }
   }
 
   // 2. Check & Seed Products
   const prodCount = await ProductModel.countDocuments();
   if (prodCount === 0 || force) {
     if (force) await ProductModel.deleteMany({});
-    await ProductModel.insertMany(seedProducts);
-    console.log(`Seeded ${seedProducts.length} products`);
+    if (seedProducts.length > 0) {
+      await ProductModel.insertMany(seedProducts);
+      console.log(`Seeded ${seedProducts.length} products${force ? ' (forced)' : ''}`);
+    }
   }
 
   // 3. Check & Seed Blogs
@@ -77,7 +81,7 @@ export async function seedDatabase(force = false) {
 
   // 7. Check & Seed Orders
   const ordCount = await OrderModel.countDocuments();
-  if (ordCount === 0 || force) {
+  if ((ordCount === 0 || force) && seedOrders.length > 0) {
     if (force) await OrderModel.deleteMany({});
     await OrderModel.insertMany(seedOrders);
     console.log(`Seeded ${seedOrders.length} orders`);
@@ -93,7 +97,7 @@ export async function seedDatabase(force = false) {
 
   // 9. Check & Seed Reviews
   const revCount = await ReviewModel.countDocuments();
-  if (revCount === 0 || force) {
+  if ((revCount === 0 || force) && seedReviews.length > 0) {
     if (force) await ReviewModel.deleteMany({});
     await ReviewModel.insertMany(seedReviews);
     console.log(`Seeded ${seedReviews.length} reviews`);

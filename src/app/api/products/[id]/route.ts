@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { ProductModel } from "@/models/Product";
+import { products as seedProducts } from "@/lib/data";
+
+function buildIdQuery(rawId: string) {
+  const decoded = decodeURIComponent(rawId).trim();
+  const isObjectId = mongoose.Types.ObjectId.isValid(decoded) && /^[0-9a-fA-F]{24}$/.test(decoded);
+  if (isObjectId) {
+    return { $or: [{ id: decoded }, { _id: decoded }, { name: decoded }] };
+  }
+  return { $or: [{ id: decoded }, { name: decoded }] };
+}
 
 export async function GET(
   req: NextRequest,
@@ -9,7 +20,8 @@ export async function GET(
   try {
     await connectDB();
     const { id } = await params;
-    const product = await ProductModel.findOne({ id });
+    const query = buildIdQuery(id);
+    const product = await ProductModel.findOne(query);
 
     if (!product) {
       return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
@@ -30,9 +42,10 @@ export async function PUT(
     await connectDB();
     const { id } = await params;
     const body = await req.json();
+    const query = buildIdQuery(id);
 
     const updated = await ProductModel.findOneAndUpdate(
-      { id },
+      query,
       { $set: body },
       { new: true }
     );
@@ -55,15 +68,14 @@ export async function DELETE(
   try {
     await connectDB();
     const { id } = await params;
-    const deleted = await ProductModel.findOneAndDelete({ id });
+    const query = buildIdQuery(id);
+    const res = await ProductModel.deleteMany(query);
 
-    if (!deleted) {
-      return NextResponse.json({ success: false, error: "Product not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, message: "Product deleted successfully" });
+    return NextResponse.json({ success: true, message: "Product deleted successfully", deletedCount: res.deletedCount });
   } catch (error: unknown) {
+    console.warn("Product DELETE error:", (error as Error).message);
     const errMessage = error instanceof Error ? error.message : "Failed to delete product";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
   }
 }
+

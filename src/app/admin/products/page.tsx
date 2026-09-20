@@ -7,6 +7,7 @@ import { inr, useApp } from "@/lib/store";
 import type { Product } from "@/lib/data";
 import { AdminPage, Btn, Field, Modal, TableWrap, inputCls, td, th } from "@/components/site/AdminUI";
 import { ImageUploader } from "@/components/site/ImageUploader";
+import { Pagination } from "@/components/site/Pagination";
 
 const blank = (category: string): Product => ({
   id: "",
@@ -35,13 +36,22 @@ export default function AdminProductsPage() {
   const [editing, setEditing] = React.useState<Product | null>(null);
   const [isNew, setIsNew] = React.useState(false);
   const [confirmId, setConfirmId] = React.useState<string | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
 
   const list = state.products.filter(
     (p) =>
       (cat === "All" || p.category === cat) &&
       (p.name.toLowerCase().includes(q.toLowerCase()) || p.category.toLowerCase().includes(q.toLowerCase()))
   );
+
+  const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, list.length);
+  const paginatedList = list.slice(startIndex, endIndex);
 
   const save = async () => {
     if (!editing) return;
@@ -62,10 +72,14 @@ export default function AdminProductsPage() {
 
   const handleDelete = async () => {
     if (!confirmId) return;
+    setDeleting(true);
     const ok = await deleteProduct(confirmId);
+    setDeleting(false);
     if (ok) {
       toast.success("Product deleted successfully");
       setConfirmId(null);
+    } else {
+      toast.error("Failed to delete product");
     }
   };
 
@@ -89,13 +103,19 @@ export default function AdminProductsPage() {
       <div className="flex flex-wrap gap-3">
         <input
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setPage(1);
+          }}
           placeholder="Search products…"
           className={`${inputCls} max-w-xs`}
         />
         <select
           value={cat}
-          onChange={(e) => setCat(e.target.value)}
+          onChange={(e) => {
+            setCat(e.target.value);
+            setPage(1);
+          }}
           className={`${inputCls} max-w-xs`}
         >
           <option>All</option>
@@ -117,59 +137,91 @@ export default function AdminProductsPage() {
           </tr>
         </thead>
         <tbody>
-          {list.map((p) => (
-            <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20">
-              <td className={`${td} font-semibold`}>
-                <div className="flex items-center gap-3">
-                  <img src={p.image} alt={p.name} className="h-10 w-10 rounded-lg object-cover border border-border" />
-                  <div>
-                    <p className="font-bold text-foreground">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.unit}</p>
-                  </div>
-                </div>
-              </td>
-              <td className={td}>
-                <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                  {p.category}
-                </span>
-              </td>
-              <td className={td}>
-                <span className="font-bold text-foreground">{inr(p.price)}</span>
-                {p.oldPrice > p.price && (
-                  <span className="ml-1 text-xs text-muted-foreground line-through">{inr(p.oldPrice)}</span>
-                )}
-              </td>
-              <td className={td}>{p.stock}</td>
-              <td className={`${td} text-xs capitalize text-muted-foreground`}>
-                {p.badges?.join(", ") || "—"}
-              </td>
-              <td className={td}>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setIsNew(false);
-                      setEditing(p);
-                    }}
-                    className="rounded-lg border border-border p-2 hover:bg-muted"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setConfirmId(p.id)}
-                    className="rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+          {list.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                No products found in catalogue. Click <strong>Add Product</strong> above to create one.
               </td>
             </tr>
-          ))}
+          ) : (
+            paginatedList.map((p) => (
+              <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20">
+                <td className={`${td} font-semibold`}>
+                  <div className="flex items-center gap-3">
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} className="h-10 w-10 rounded-lg object-cover border border-border" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                        {p.name.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-bold text-foreground">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.unit}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className={td}>
+                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    {p.category}
+                  </span>
+                </td>
+                <td className={td}>
+                  <span className="font-bold text-foreground">{inr(p.price)}</span>
+                  {p.oldPrice > p.price && (
+                    <span className="ml-1 text-xs text-muted-foreground line-through">{inr(p.oldPrice)}</span>
+                  )}
+                </td>
+                <td className={td}>{p.stock}</td>
+                <td className={`${td} text-xs capitalize text-muted-foreground`}>
+                  {p.badges?.join(", ") || "—"}
+                </td>
+                <td className={td}>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setIsNew(false);
+                        setEditing(p);
+                      }}
+                      className="rounded-lg border border-border p-2 hover:bg-muted"
+                      title="Edit Product"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmId(p.id)}
+                      className="rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
+                      title="Delete Product"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </TableWrap>
 
+      {list.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={list.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setPageSize(sz);
+            setPage(1);
+          }}
+          pageSizeOptions={[10, 20, 50]}
+        />
+      )}
+
+
       <Modal open={!!editing} onClose={() => setEditing(null)} title={isNew ? "Add New Product" : "Edit Product"} wide>
         {editing && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 min-w-0 w-full">
             <Field label="Product Name">
               <input
                 className={inputCls}
@@ -334,14 +386,21 @@ export default function AdminProductsPage() {
           This permanently removes the product from the MongoDB database and storefront catalogue.
         </p>
         <div className="mt-5 flex justify-end gap-2">
-          <Btn variant="ghost" onClick={() => setConfirmId(null)}>
+          <Btn variant="ghost" onClick={() => setConfirmId(null)} disabled={deleting}>
             Cancel
           </Btn>
-          <Btn variant="danger" onClick={handleDelete}>
-            Delete from Database
+          <Btn variant="danger" onClick={handleDelete} disabled={deleting}>
+            {deleting ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Deleting...
+              </span>
+            ) : (
+              "Delete from Database"
+            )}
           </Btn>
         </div>
       </Modal>
+
     </AdminPage>
   );
 }

@@ -5,6 +5,8 @@ export interface IOrderItem {
   name: string;
   price: number;
   qty: number;
+  unit?: string;
+  image?: string;
 }
 
 export interface IOrder extends Document {
@@ -22,6 +24,11 @@ export interface IOrder extends Document {
   total: number;
   address: string;
   payment: string;
+  paymentId?: string;
+  paymentStatus?: "Pending" | "Paid" | "Failed";
+  trackingNumber?: string;
+  courier?: string;
+  estimatedDelivery?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +39,8 @@ const OrderItemSchema = new Schema<IOrderItem>(
     name: { type: String, required: true },
     price: { type: Number, required: true },
     qty: { type: Number, required: true, default: 1 },
+    unit: { type: String, default: "" },
+    image: { type: String, default: "" },
   },
   { _id: false }
 );
@@ -56,7 +65,12 @@ const OrderSchema = new Schema<IOrder>(
     tax: { type: Number, default: 0 },
     total: { type: Number, required: true },
     address: { type: String, required: true },
-    payment: { type: String, default: "Cash on Delivery" },
+    payment: { type: String, default: "Razorpay (Online)" },
+    paymentId: { type: String, default: "" },
+    paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed"], default: "Paid" },
+    trackingNumber: { type: String, default: "" },
+    courier: { type: String, default: "VRL Logistics / DTDC Express" },
+    estimatedDelivery: { type: String, default: "3 - 5 business days" },
   },
   { timestamps: true }
 );

@@ -16,14 +16,14 @@ const cropSolutions: CropSolution[] = [
   {
     name: "Cotton",
     season: "Kharif (June-October)",
-    image: "https://images.unsplash.com/photo-1594897030561-681c953531db?auto=format&fit=crop&w=1200&q=80",
+    image: "https://cdn.pixabay.com/photo/2019/11/24/17/08/cotton-4649804_640.jpg",
     diseases: ["Bollworm", "Whitefly", "Leaf curl virus"],
     products: ["GreenGold Hybrid Cotton Seeds", "ProtectMax Imidacloprid", "MicroMix Plus"],
   },
   {
     name: "Sugarcane",
     season: "Year-round, peak Feb-March",
-    image: "https://images.unsplash.com/photo-1611735341450-74d61e660ad2?auto=format&fit=crop&w=1200&q=80",
+    image: "https://media.istockphoto.com/id/93541349/photo/sugar-cane-plantation.jpg?s=612x612&w=0&k=20&c=mj-rR4mE718aFrPtXg8P7ZW7eZNROItjXlYjz5A9AvU=",
     diseases: ["Red rot", "Smut", "Borer complex"],
     products: ["AgriPro Sugarcane Setts", "Potash Power MOP", "BioShield Trichoderma"],
   },

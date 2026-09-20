@@ -2,19 +2,25 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Minus, Plus, Tag, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Minus, Plus, Tag, Trash2, Lock, ArrowRight, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { FREE_SHIPPING, SHIPPING_FEE, inr, useApp, useCartTotals } from "@/lib/store";
+import { FREE_SHIPPING, SHIPPING_FEE, inr, useApp, useCartTotals, useUser } from "@/lib/store";
 import { PageHero } from "@/components/site/Section";
 
 export default function CartPage() {
+  const router = useRouter();
   const { state, setQty, removeFromCart } = useApp();
+  const user = useUser();
   const { lines, subtotal } = useCartTotals();
   const [code, setCode] = React.useState("");
   const [applied, setApplied] = React.useState<string | null>(null);
   const coupon = state.coupons.find((c) => c.code === applied) ?? null;
   const discount = coupon ? Math.round((subtotal * coupon.discount) / 100) : 0;
-  const shipping = subtotal - discount >= FREE_SHIPPING || subtotal === 0 ? 0 : SHIPPING_FEE;
+  
+  const freeShippingLimit = state.settings.freeShippingThreshold ?? FREE_SHIPPING;
+  const standardShippingFee = state.settings.shippingFee ?? SHIPPING_FEE;
+  const shipping = subtotal - discount >= freeShippingLimit || subtotal === 0 ? 0 : standardShippingFee;
   const tax = Math.round((subtotal - discount) * 0.05);
   const total = subtotal - discount + shipping + tax;
 
@@ -53,14 +59,14 @@ export default function CartPage() {
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-sm text-muted-foreground">
-              {subtotal >= FREE_SHIPPING
+              {subtotal >= freeShippingLimit
                 ? "You have unlocked free shipping!"
-                : `Add ${inr(FREE_SHIPPING - subtotal)} more for free shipping`}
+                : `Add ${inr(freeShippingLimit - subtotal)} more for free shipping`}
             </p>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full bg-secondary"
-                style={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING) * 100)}%` }}
+                style={{ width: `${Math.min(100, (subtotal / freeShippingLimit) * 100)}%` }}
               />
             </div>
           </div>
@@ -133,12 +139,34 @@ export default function CartPage() {
               <Row label="Total" value={inr(total)} bold />
             </div>
           </dl>
-          <Link
-            href="/checkout"
-            className="mt-5 block rounded-full bg-primary py-3 text-center text-sm font-semibold text-primary-foreground hover:bg-secondary"
-          >
-            Proceed to Checkout
-          </Link>
+          {user ? (
+            <Link
+              href="/checkout"
+              className="mt-5 flex items-center justify-center gap-2 rounded-full bg-primary py-3 text-center text-sm font-bold text-primary-foreground shadow-md hover:bg-secondary transition-all"
+            >
+              Proceed to Checkout <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                toast.info("Please sign in or register to complete your purchase.");
+                router.push("/login?redirect=/checkout");
+              }}
+              className="mt-5 w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3 text-center text-sm font-bold text-primary-foreground shadow-md hover:bg-secondary transition-all"
+            >
+              <Lock className="h-4 w-4" /> Sign In to Checkout
+            </button>
+          )}
+
+          {!user && (
+            <div className="mt-3.5 rounded-xl bg-muted/70 p-3 text-[11px] text-muted-foreground border border-border flex items-start gap-2 leading-relaxed">
+              <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <span>
+                Account required to select delivery farm addresses and confirm your order. Your cart items are preserved.
+              </span>
+            </div>
+          )}
+
           <p className="mt-3 text-center text-xs text-muted-foreground">Available coupons: {state.coupons.map((c) => c.code).join(", ")}</p>
         </aside>
       </div>

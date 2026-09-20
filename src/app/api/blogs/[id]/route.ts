@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { BlogModel } from "@/models/Blog";
 
@@ -55,13 +56,12 @@ export async function DELETE(
   try {
     await connectDB();
     const { id } = await params;
-    const deleted = await BlogModel.findOneAndDelete({ id });
+    const clean = decodeURIComponent(id).trim();
+    const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
+    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }, { slug: clean }] } : { $or: [{ id: clean }, { slug: clean }] };
+    const deleted = await BlogModel.deleteMany(query);
 
-    if (!deleted) {
-      return NextResponse.json({ success: false, error: "Blog not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, message: "Blog deleted successfully" });
+    return NextResponse.json({ success: true, message: "Blog deleted successfully", deletedCount: deleted.deletedCount });
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : "Failed to delete blog";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });

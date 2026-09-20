@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { CustomerModel } from "@/models/Customer";
-import { seedDatabase } from "@/lib/seedDb";
+import { UserModel } from "@/models/User";
 
 export async function GET() {
   try {
     await connectDB();
-    const count = await CustomerModel.countDocuments();
-    if (count === 0) {
-      await seedDatabase(false);
-    }
     const customers = await CustomerModel.find({}).sort({ createdAt: -1 });
     return NextResponse.json({ success: true, customers });
   } catch (error: unknown) {
@@ -31,15 +27,34 @@ export async function POST(req: NextRequest) {
     }
 
     const id = body.id || `c_${Date.now()}`;
+    const cleanEmail = body.email.toLowerCase().trim();
+
     const customer = await CustomerModel.create({
       ...body,
       id,
-      email: body.email.toLowerCase().trim(),
+      email: cleanEmail,
     });
 
     return NextResponse.json({ success: true, customer });
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : "Failed to create customer";
+    return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    await connectDB();
+    const result = await CustomerModel.deleteMany({});
+    await UserModel.deleteMany({ role: { $ne: "admin" } });
+
+    return NextResponse.json({
+      success: true,
+      message: "All customers deleted successfully from MongoDB",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : "Failed to delete all customers";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
   }
 }

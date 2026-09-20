@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Leaf, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, MessageCircle } from "lucide-react";
 import { useApp } from "@/lib/store";
 
 export function Footer() {
@@ -20,18 +20,77 @@ export function Footer() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1 shadow-xs transition-transform group-hover:scale-105">
                 <img
                   src="/logo.png"
-                  alt="Plant Health Solutions"
+                  alt={s.name || "Plant Health Solutions"}
                   className="h-full w-full object-contain"
                 />
               </div>
               <span className="font-display text-xl font-bold tracking-tight text-white">
-                Plant Health Solutions
+                {s.name || "Plant Health Solutions"}
               </span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#d1dbcd]">
-              Research-driven agricultural products for sustainable farming across India.
-              Manufactured at our Vijayapura facility.
+              {s.description ||
+                "Research-driven agricultural products for sustainable farming across India. Manufactured at our Vijayapura facility."}
             </p>
+
+            {/* Social / WhatsApp icons */}
+            <div className="mt-5 flex items-center gap-3">
+              {s.whatsapp && (
+                <a
+                  href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-emerald-600 transition-colors"
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              )}
+              {s.facebook && (
+                <a
+                  href={s.facebook}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-blue-600 transition-colors"
+                  aria-label="Facebook"
+                >
+                  <span className="text-xs font-bold">f</span>
+                </a>
+              )}
+              {s.instagram && (
+                <a
+                  href={s.instagram}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-pink-600 transition-colors"
+                  aria-label="Instagram"
+                >
+                  <span className="text-xs font-bold">ig</span>
+                </a>
+              )}
+              {s.youtube && (
+                <a
+                  href={s.youtube}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-red-600 transition-colors"
+                  aria-label="YouTube"
+                >
+                  <span className="text-xs font-bold">yt</span>
+                </a>
+              )}
+              {s.twitter && (
+                <a
+                  href={s.twitter}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-sky-500 transition-colors"
+                  aria-label="Twitter"
+                >
+                  <span className="text-xs font-bold">𝕏</span>
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Column 2: COMPANY */}
@@ -65,7 +124,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/contact" className="transition-colors hover:text-white">
-                  FAQ
+                  FAQ &amp; Support
                 </Link>
               </li>
             </ul>
@@ -88,8 +147,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/account" className="transition-colors hover:text-white">
-                  Order Tracking
+                <Link href="/wishlist" className="transition-colors hover:text-white">
+                  Wishlist ({state.wishlist.length})
                 </Link>
               </li>
               <li>
@@ -99,7 +158,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/cart" className="transition-colors hover:text-white">
-                  Cart
+                  Shopping Cart
                 </Link>
               </li>
             </ul>
@@ -114,7 +173,7 @@ export function Footer() {
               <li className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#6bb055]" />
                 <span className="leading-relaxed">
-                  NH-52, Vijayapur–Solapur Road, Tidagundi, Vijayapura, Karnataka 586119
+                  {s.address || "NH-52, Vijayapur–Solapur Road, Tidagundi, Vijayapura, Karnataka 586119"}
                 </span>
               </li>
               <li className="flex items-center gap-2.5">
@@ -129,10 +188,10 @@ export function Footer() {
               <li className="flex items-center gap-2.5">
                 <Mail className="h-4 w-4 shrink-0 text-[#6bb055]" />
                 <a
-                  href="mailto:hello@planthealthsolutions.com"
+                  href={`mailto:${s.email1 || "planthealthsol@gmail.com"}`}
                   className="transition-colors hover:text-white"
                 >
-                  hello@planthealthsolutions.com
+                  {s.email1 || "planthealthsol@gmail.com"}
                 </a>
               </li>
             </ul>
@@ -143,13 +202,13 @@ export function Footer() {
       {/* Bottom Sub-footer */}
       <div className="border-t border-[#234b2b] bg-[#142d19]">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-xs text-[#a9bca5] sm:px-8 md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} Plant Health Solutions Pvt. Ltd. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {s.name || "Plant Health Solutions Pvt. Ltd."}. All rights reserved.</p>
           <div className="flex flex-wrap gap-4 sm:gap-6">
             <Link href="/privacy-policy" className="transition-colors hover:text-white">
               Privacy Policy
             </Link>
             <Link href="/terms" className="transition-colors hover:text-white">
-              Terms & Conditions
+              Terms &amp; Conditions
             </Link>
             <Link href="/refund-policy" className="transition-colors hover:text-white">
               Refund Policy

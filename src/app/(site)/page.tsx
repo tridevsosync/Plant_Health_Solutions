@@ -14,24 +14,88 @@ import {
   Sprout,
   Star,
   Tractor,
+  MessageSquareQuote,
+  Plus,
+  Loader2,
+  Sparkles,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { COMPANY } from "@/lib/data";
 import { inr, useApp } from "@/lib/store";
 
 export default function HomePage() {
-  const { state, addToCart, toggleWishlist } = useApp();
+  const { state, addToCart, toggleWishlist, submitTestimonialFeedback } = useApp();
   const [selectedCat, setSelectedCat] = React.useState("All");
+  const [showFeedbackModal, setShowFeedbackModal] = React.useState(false);
+  const [submittingFeedback, setSubmittingFeedback] = React.useState(false);
+  const [feedbackForm, setFeedbackForm] = React.useState({
+    name: "",
+    place: "Vijayapura, Karnataka",
+    crop: "Sugarcane",
+    rating: 5,
+    productId: "",
+    quote: "",
+  });
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackForm.name.trim() || !feedbackForm.quote.trim()) {
+      toast.error("Please enter your name and feedback message.");
+      return;
+    }
+
+    const selProd = state.products.find((p) => p.id === feedbackForm.productId);
+
+    setSubmittingFeedback(true);
+    const res = await submitTestimonialFeedback({
+      name: feedbackForm.name.trim(),
+      place: feedbackForm.place.trim(),
+      crop: feedbackForm.crop.trim(),
+      rating: Number(feedbackForm.rating),
+      productId: feedbackForm.productId,
+      productName: selProd?.name || "",
+      quote: feedbackForm.quote.trim(),
+      status: "Pending",
+    });
+    setSubmittingFeedback(false);
+
+    if (res.success) {
+      toast.success(
+        "Thank you! Your feedback has been submitted. It will appear on the website once approved by our agro agronomy team."
+      );
+      setShowFeedbackModal(false);
+      setFeedbackForm({
+        name: "",
+        place: "Vijayapura, Karnataka",
+        crop: "Sugarcane",
+        rating: 5,
+        productId: "",
+        quote: "",
+      });
+    } else {
+      toast.error(res.error || "Failed to submit feedback");
+    }
+  };
 
   // Top rated / featured products based on selected tab
   const filteredProducts = React.useMemo(() => {
     if (selectedCat === "All") {
-      return state.products.slice(0, 8);
+      return state.products.slice(0, 16);
     }
     return state.products
-      .filter((p) => p.category.toLowerCase() === selectedCat.toLowerCase())
-      .slice(0, 8);
+      .filter((p) => {
+        const pCat = p.category.toLowerCase().trim();
+        const sCat = selectedCat.toLowerCase().trim();
+        return pCat === sCat || pCat.includes(sCat) || sCat.includes(pCat);
+      })
+      .slice(0, 16);
   }, [state.products, selectedCat]);
+
+  const approvedTestimonials = React.useMemo(() => {
+    const list = state.testimonials.filter((t) => t.status === "Approved" || !t.status);
+    return list.length > 0 ? list : [];
+  }, [state.testimonials]);
 
   return (
     <div>
@@ -179,37 +243,43 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-4">
-            {state.categories.slice(0, 8).map((c) => {
-              const count = state.products.filter((p) => p.category.toLowerCase() === c.name.toLowerCase()).length;
-              return (
-                <Link
-                  key={c.id || c.name}
-                  href={`/products?category=${encodeURIComponent(c.name)}`}
-                  className="group overflow-hidden rounded-2xl border border-border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-                >
-                  <div className="relative aspect-video overflow-hidden bg-muted">
-                    <img
-                      alt={c.name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      src={c.image || "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=800&q=80"}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <span className="absolute bottom-2 left-3 rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur-xs">
-                      {count} Products
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <div className="font-display font-bold text-foreground group-hover:text-primary transition-colors text-base">
-                      {c.name}
+          {state.categories.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+              No categories listed yet.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-4">
+              {state.categories.slice(0, 8).map((c) => {
+                const count = state.products.filter((p) => p.category.toLowerCase() === c.name.toLowerCase()).length;
+                return (
+                  <Link
+                    key={c.id || c.name}
+                    href={`/products?category=${encodeURIComponent(c.name)}`}
+                    className="group overflow-hidden rounded-2xl border border-border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                  >
+                    <div className="relative aspect-video overflow-hidden bg-muted">
+                      <img
+                        alt={c.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        src={c.image || "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=800&q=80"}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <span className="absolute bottom-2 left-3 rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur-xs">
+                        {count} Products
+                      </span>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground line-clamp-1">{c.description}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                    <div className="p-4">
+                      <div className="font-display font-bold text-foreground group-hover:text-primary transition-colors text-base">
+                        {c.name}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground line-clamp-1">{c.description}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
 
@@ -486,102 +556,216 @@ export default function HomePage() {
       {/* 7. Testimonials Section */}
       <div className="bg-accent/25 border-y border-border/60">
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
-          <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
-            <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
-              Testimonials
-            </span>
-            <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
-              From farmers who trust us
-            </h2>
+          <div className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4 md:mb-14">
+            <div>
+              <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+                Farmer Testimonials &amp; Verified Results
+              </span>
+              <h2 className="mt-2 max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
+                From farmers who trust us across India
+              </h2>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                Real crop observations from farmers using certified Plant Health Solutions inputs.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowFeedbackModal(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md hover:bg-secondary transition-all active:scale-95 shrink-0"
+            >
+              <MessageSquareQuote className="h-4 w-4" /> Share Your Farm Story
+            </button>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
-            {/* Testimonial 1 */}
-            <div className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-xs">
-              <Quote className="h-7 w-7 text-secondary" />
-              <p className="mt-3 flex-1 text-sm text-foreground leading-relaxed">
-                &ldquo;BioShield Trichoderma saved my crop from wilt. My yield increased by 35% this
-                season.&rdquo;
-              </p>
-              <div className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
-                <img
-                  alt="Ramesh Patil"
-                  loading="lazy"
-                  className="h-11 w-11 rounded-full object-cover"
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
-                />
-                <div>
-                  <div className="text-sm font-bold text-foreground">Ramesh Patil</div>
-                  <div className="text-xs text-muted-foreground">
-                    Vijayapura, Karnataka · Cotton
-                  </div>
-                </div>
-                <div className="ml-auto flex text-secondary">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                  ))}
-                </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {approvedTestimonials.length === 0 ? (
+              <div className="col-span-full rounded-2xl border border-dashed border-border bg-card/60 p-8 text-center text-muted-foreground">
+                <MessageSquareQuote className="mx-auto h-10 w-10 text-muted-foreground/40 mb-2" />
+                <p className="text-sm font-semibold text-foreground">No approved testimonials yet.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Be the first farmer to submit feedback on our bio inputs!</p>
               </div>
-            </div>
+            ) : (
+              approvedTestimonials.map((t) => (
+                <div key={t.id} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-6 shadow-xs transition-all hover:shadow-md">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <Quote className="h-7 w-7 text-secondary" />
+                      <div className="flex text-amber-500">
+                        {[...Array(t.rating || 5)].map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                        ))}
+                      </div>
+                    </div>
+                    {t.productName && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary mb-2">
+                        <Sparkles className="h-3 w-3" /> {t.productName}
+                      </span>
+                    )}
+                    <p className="text-sm text-foreground leading-relaxed italic">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+                  </div>
 
-            {/* Testimonial 2 */}
-            <div className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-xs">
-              <Quote className="h-7 w-7 text-secondary" />
-              <p className="mt-3 flex-1 text-sm text-foreground leading-relaxed">
-                &ldquo;The Sugarcane Setts gave exceptional tillering. I have been farming for 25
-                years and this is the best variety I have grown.&rdquo;
-              </p>
-              <div className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
-                <img
-                  alt="Sunita Deshmukh"
-                  loading="lazy"
-                  className="h-11 w-11 rounded-full object-cover"
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80"
-                />
-                <div>
-                  <div className="text-sm font-bold text-foreground">Sunita Deshmukh</div>
-                  <div className="text-xs text-muted-foreground">
-                    Solapur, Maharashtra · Sugarcane
+                  <div className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {t.name ? t.name.charAt(0).toUpperCase() : "F"}
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-foreground">{t.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t.place} · <span className="font-semibold text-secondary">{t.crop}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-auto flex text-secondary">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 3 */}
-            <div className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-xs">
-              <Quote className="h-7 w-7 text-secondary" />
-              <p className="mt-3 flex-1 text-sm text-foreground leading-relaxed">
-                &ldquo;Their micronutrient mix corrected my chlorosis issue within two sprays.
-                Excellent product support also.&rdquo;
-              </p>
-              <div className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
-                <img
-                  alt="Vikram Hegde"
-                  loading="lazy"
-                  className="h-11 w-11 rounded-full object-cover"
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
-                />
-                <div>
-                  <div className="text-sm font-bold text-foreground">Vikram Hegde</div>
-                  <div className="text-xs text-muted-foreground">
-                    Belgaum, Karnataka · Pomegranate
-                  </div>
-                </div>
-                <div className="ml-auto flex text-secondary">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                  ))}
-                </div>
-              </div>
-            </div>
+              ))
+            )}
           </div>
         </section>
       </div>
+
+      {/* Public Feedback Submission Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+              <div>
+                <h3 className="font-display text-xl font-bold text-foreground">Share Your Farm Feedback</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Your feedback helps fellow farmers and our agronomy research team.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFeedbackModal(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                  Farmer / Customer Name *
+                </label>
+                <input
+                  required
+                  value={feedbackForm.name}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
+                  placeholder="e.g. Ramesh Patil"
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                    Village / District *
+                  </label>
+                  <input
+                    required
+                    value={feedbackForm.place}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, place: e.target.value })}
+                    placeholder="Vijayapura, Karnataka"
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                    Crop Grown *
+                  </label>
+                  <input
+                    required
+                    value={feedbackForm.crop}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, crop: e.target.value })}
+                    placeholder="Sugarcane / Cotton / Grapes"
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                    Rating (1 to 5 Stars) *
+                  </label>
+                  <select
+                    value={feedbackForm.rating}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, rating: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                  >
+                    <option value={5}>5 Stars - Excellent Result</option>
+                    <option value={4}>4 Stars - Very Good</option>
+                    <option value={3}>3 Stars - Good</option>
+                    <option value={2}>2 Stars - Average</option>
+                    <option value={1}>1 Star - Poor</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                    Product Used (Optional)
+                  </label>
+                  <select
+                    value={feedbackForm.productId}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, productId: e.target.value })}
+                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                  >
+                    <option value="">General Farm Solution</option>
+                    {state.products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                  Your Crop Result &amp; Experience *
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={feedbackForm.quote}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, quote: e.target.value })}
+                  placeholder="Share details on application schedule, crop vigor, pest/disease recovery, or yield improvement..."
+                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="rounded-xl bg-amber-500/10 p-3 text-xs text-amber-700 border border-amber-500/20">
+                <span className="font-bold">Note:</span> Submitted feedbacks are moderated and approved by our agronomy desk before being published live on the website.
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="rounded-full border border-border px-5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingFeedback}
+                  className="rounded-full bg-primary px-7 py-2 text-xs font-bold text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
+                >
+                  {submittingFeedback ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Submitting...
+                    </>
+                  ) : (
+                    "Submit Feedback"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 8. Latest Insights (From our agronomy desk) */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">

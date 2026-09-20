@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { TestimonialModel } from "@/models/Testimonial";
 
@@ -9,10 +10,14 @@ export async function PUT(
   try {
     await connectDB();
     const { id } = await params;
+    const clean = decodeURIComponent(id).trim();
     const body = await req.json();
 
+    const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
+    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
+
     const updated = await TestimonialModel.findOneAndUpdate(
-      { id },
+      query,
       { $set: body },
       { new: true }
     );
@@ -35,13 +40,16 @@ export async function DELETE(
   try {
     await connectDB();
     const { id } = await params;
-    const deleted = await TestimonialModel.findOneAndDelete({ id });
+    const clean = decodeURIComponent(id).trim();
+    const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
+    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
+    const deleted = await TestimonialModel.deleteMany(query);
 
-    if (!deleted) {
-      return NextResponse.json({ success: false, error: "Testimonial not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, message: "Testimonial deleted successfully" });
+    return NextResponse.json({
+      success: true,
+      message: "Testimonial deleted successfully",
+      deletedCount: deleted.deletedCount,
+    });
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : "Failed to delete testimonial";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });

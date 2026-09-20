@@ -23,7 +23,7 @@ import {
   type Testimonial,
 } from "./data";
 
-const KEY = "phs_state_v2";
+const KEY = "phs_state_v5";
 
 export type CartLine = { id: string; qty: number };
 export type Address = { label: string; line: string; city: string; pincode: string };
@@ -41,10 +41,19 @@ export type Settings = {
   name: string;
   owner: string;
   phone: string;
+  whatsapp?: string;
   email1: string;
   email2: string;
   address: string;
   description: string;
+  gst?: string;
+  announcement?: string;
+  freeShippingThreshold?: number;
+  shippingFee?: number;
+  facebook?: string;
+  instagram?: string;
+  youtube?: string;
+  twitter?: string;
 };
 
 export type State = {
@@ -71,7 +80,7 @@ const initialState: State = {
   categories: seedCategories,
   blogs: seedBlogs,
   testimonials: seedTestimonials,
-  customers: seedCustomers,
+  customers: [],
   orders: seedOrders,
   reviews: seedReviews,
   enquiries: seedEnquiries,
@@ -80,10 +89,19 @@ const initialState: State = {
     name: COMPANY.name,
     owner: COMPANY.owner,
     phone: COMPANY.phone,
+    whatsapp: COMPANY.phone,
     email1: COMPANY.email1,
     email2: COMPANY.email2,
     address: COMPANY.address,
     description: COMPANY.description,
+    gst: "29AAGCP1234F1Z5",
+    announcement: "Free soil testing on orders above ₹5,000",
+    freeShippingThreshold: 2000,
+    shippingFee: 90,
+    facebook: "https://facebook.com",
+    instagram: "https://instagram.com",
+    youtube: "https://youtube.com",
+    twitter: "https://twitter.com",
   },
   cart: [],
   wishlist: [],
@@ -129,16 +147,21 @@ type Ctx = {
   // Coupon CRUD
   saveCoupon: (coupon: Coupon, isNew: boolean) => Promise<boolean>;
   deleteCoupon: (code: string) => Promise<boolean>;
+  deleteAllCoupons: () => Promise<boolean>;
   // Customer CRUD
   saveCustomer: (c: Customer, isNew: boolean) => Promise<boolean>;
   deleteCustomer: (id: string) => Promise<boolean>;
+  deleteAllCustomers: () => Promise<boolean>;
   // Enquiry CRUD
   createEnquiry: (enq: Partial<Enquiry>) => Promise<{ success: boolean; error?: string }>;
   updateEnquiryStatus: (id: string, status: "New" | "Answered") => Promise<boolean>;
   deleteEnquiry: (id: string) => Promise<boolean>;
-  // Testimonial CRUD
+  // Testimonial & Feedback CRUD
+  submitTestimonialFeedback: (t: Partial<Testimonial>) => Promise<{ success: boolean; message?: string; error?: string }>;
   saveTestimonial: (t: Testimonial, isNew: boolean) => Promise<boolean>;
+  updateTestimonialStatus: (id: string, status: "Pending" | "Approved" | "Rejected") => Promise<boolean>;
   deleteTestimonial: (id: string) => Promise<boolean>;
+  deleteAllTestimonials: () => Promise<boolean>;
   // Settings
   saveSettings: (s: Settings) => Promise<boolean>;
 };
@@ -172,7 +195,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/categories").then((r) => r.json()),
         fetch("/api/blogs").then((r) => r.json()),
         fetch("/api/orders").then((r) => r.json()),
-        fetch("/api/testimonials").then((r) => r.json()),
+        fetch("/api/testimonials?all=true").then((r) => r.json()),
         fetch("/api/enquiries").then((r) => r.json()),
         fetch("/api/coupons").then((r) => r.json()),
         fetch("/api/customers").then((r) => r.json()),
@@ -181,28 +204,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       setState((prev) => {
         const next = { ...prev };
-        if (prodRes.status === "fulfilled" && prodRes.value?.success && prodRes.value.products?.length) {
+        if (prodRes.status === "fulfilled" && prodRes.value?.success && Array.isArray(prodRes.value.products)) {
           next.products = prodRes.value.products;
         }
-        if (catRes.status === "fulfilled" && catRes.value?.success && catRes.value.categories?.length) {
+
+        if (catRes.status === "fulfilled" && catRes.value?.success && Array.isArray(catRes.value.categories)) {
           next.categories = catRes.value.categories;
         }
-        if (blogRes.status === "fulfilled" && blogRes.value?.success && blogRes.value.blogs?.length) {
+
+        if (blogRes.status === "fulfilled" && blogRes.value?.success && Array.isArray(blogRes.value.blogs)) {
           next.blogs = blogRes.value.blogs;
         }
-        if (orderRes.status === "fulfilled" && orderRes.value?.success && orderRes.value.orders?.length) {
+        if (orderRes.status === "fulfilled" && orderRes.value?.success && Array.isArray(orderRes.value.orders)) {
           next.orders = orderRes.value.orders;
         }
-        if (testRes.status === "fulfilled" && testRes.value?.success && testRes.value.testimonials?.length) {
+        if (testRes.status === "fulfilled" && testRes.value?.success && Array.isArray(testRes.value.testimonials)) {
           next.testimonials = testRes.value.testimonials;
         }
-        if (enqRes.status === "fulfilled" && enqRes.value?.success && enqRes.value.enquiries?.length) {
+        if (enqRes.status === "fulfilled" && enqRes.value?.success && Array.isArray(enqRes.value.enquiries)) {
           next.enquiries = enqRes.value.enquiries;
         }
-        if (coupRes.status === "fulfilled" && coupRes.value?.success && coupRes.value.coupons?.length) {
+        if (coupRes.status === "fulfilled" && coupRes.value?.success && Array.isArray(coupRes.value.coupons)) {
           next.coupons = coupRes.value.coupons;
         }
-        if (custRes.status === "fulfilled" && custRes.value?.success && custRes.value.customers?.length) {
+        if (custRes.status === "fulfilled" && custRes.value?.success && Array.isArray(custRes.value.customers)) {
           next.customers = custRes.value.customers;
         }
         if (settRes.status === "fulfilled" && settRes.value?.success && settRes.value.settings) {
@@ -215,13 +240,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+
   // Initial load from localStorage + API
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<State>;
-        setState((s) => ({ ...s, ...parsed }));
+        setState((s) => ({
+          ...s,
+          ...parsed,
+          products: parsed.products && parsed.products.length > 0 ? parsed.products : s.products,
+          categories: parsed.categories && parsed.categories.length > 0 ? parsed.categories : s.categories,
+        }));
+
+        if (parsed.currentUser) {
+          fetch(`/api/auth/user?email=${encodeURIComponent(parsed.currentUser)}`)
+            .then((r) => r.json())
+            .then((d) => {
+              if (d.success && d.user) {
+                const u = d.user;
+                setState((s) => ({
+                  ...s,
+                  currentUserData: u,
+                  users: [
+                    ...s.users.filter((x) => x.email.toLowerCase() !== u.email.toLowerCase()),
+                    u,
+                  ],
+                }));
+              }
+            })
+            .catch(() => {});
+        }
       }
     } catch {
       /* ignore */
@@ -229,6 +279,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setReady(true);
     refreshData();
   }, [refreshData]);
+
 
   // Persist to local cache for instant offline responsiveness
   React.useEffect(() => {
@@ -428,17 +479,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteProduct = async (id: string) => {
     try {
-      await fetch(`/api/products/${id}`, { method: "DELETE" });
+      await fetch(`/api/products/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete product error:", e);
     }
-    set((s) => ({ ...s, products: s.products.filter((p) => p.id !== id) }));
+    set((s) => ({
+      ...s,
+      products: s.products.filter((p) => p.id !== id && p.name !== id),
+      cart: s.cart.filter((c) => c.id !== id),
+      wishlist: s.wishlist.filter((w) => w !== id),
+    }));
     return true;
   };
 
   const saveCategory = async (c: Category, isNew: boolean) => {
     try {
-      const url = isNew ? "/api/categories" : `/api/categories/${c.id}`;
+      const url = isNew ? "/api/categories" : `/api/categories/${encodeURIComponent(c.id)}`;
       const method = isNew ? "POST" : "PUT";
       const res = await fetch(url, {
         method,
@@ -470,13 +526,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteCategory = async (id: string) => {
     try {
-      await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      await fetch(`/api/categories/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete category error:", e);
     }
-    set((s) => ({ ...s, categories: s.categories.filter((c) => c.id !== id) }));
+    set((s) => ({
+      ...s,
+      categories: s.categories.filter((c) => c.id !== id && c.slug !== id && c.name !== id),
+    }));
     return true;
   };
+
 
   const createOrder = async (orderData: Partial<Order>) => {
     try {
@@ -529,7 +589,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteOrder = async (id: string) => {
     try {
-      await fetch(`/api/orders/${id}`, { method: "DELETE" });
+      await fetch(`/api/orders/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete order error:", e);
     }
@@ -539,7 +599,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const saveBlog = async (b: Blog, isNew: boolean) => {
     try {
-      const url = isNew ? "/api/blogs" : `/api/blogs/${b.id}`;
+      const url = isNew ? "/api/blogs" : `/api/blogs/${encodeURIComponent(b.id)}`;
       const method = isNew ? "POST" : "PUT";
       const res = await fetch(url, {
         method,
@@ -571,7 +631,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteBlog = async (id: string) => {
     try {
-      await fetch(`/api/blogs/${id}`, { method: "DELETE" });
+      await fetch(`/api/blogs/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete blog error:", e);
     }
@@ -613,17 +673,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteCoupon = async (code: string) => {
     try {
-      await fetch(`/api/coupons/${code}`, { method: "DELETE" });
+      await fetch(`/api/coupons/${encodeURIComponent(code)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete coupon error:", e);
     }
-    set((s) => ({ ...s, coupons: s.coupons.filter((c) => c.code !== code) }));
+    set((s) => ({
+      ...s,
+      coupons: s.coupons.filter((c) => c.code.toUpperCase() !== code.toUpperCase()),
+    }));
+    return true;
+  };
+
+  const deleteAllCoupons = async () => {
+    try {
+      await fetch("/api/coupons", { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete all coupons error:", e);
+    }
+    set((s) => ({
+      ...s,
+      coupons: [],
+    }));
     return true;
   };
 
   const saveCustomer = async (c: Customer, isNew: boolean) => {
     try {
-      const url = isNew ? "/api/customers" : `/api/customers/${c.id}`;
+      const url = isNew ? "/api/customers" : `/api/customers/${encodeURIComponent(c.id)}`;
       const method = isNew ? "POST" : "PUT";
       const res = await fetch(url, {
         method,
@@ -653,13 +729,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const deleteCustomer = async (id: string) => {
+  const deleteCustomer = async (idOrEmail: string) => {
     try {
-      await fetch(`/api/customers/${id}`, { method: "DELETE" });
+      await fetch(`/api/customers/${encodeURIComponent(idOrEmail)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete customer error:", e);
     }
-    set((s) => ({ ...s, customers: s.customers.filter((c) => c.id !== id) }));
+    const target = idOrEmail.toLowerCase();
+    set((s) => ({
+      ...s,
+      customers: s.customers.filter(
+        (c) =>
+          c.id !== idOrEmail &&
+          c.id?.toLowerCase() !== target &&
+          c.email?.toLowerCase() !== target &&
+          (c as unknown as { _id?: string })._id !== idOrEmail
+      ),
+    }));
+    return true;
+  };
+
+  const deleteAllCustomers = async () => {
+    try {
+      await fetch("/api/customers", { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete all customers error:", e);
+    }
+    set((s) => ({
+      ...s,
+      customers: [],
+    }));
     return true;
   };
 
@@ -685,7 +784,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateEnquiryStatus = async (id: string, status: "New" | "Answered") => {
     try {
-      const res = await fetch(`/api/enquiries/${id}`, {
+      const res = await fetch(`/api/enquiries/${encodeURIComponent(id)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -710,7 +809,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteEnquiry = async (id: string) => {
     try {
-      await fetch(`/api/enquiries/${id}`, { method: "DELETE" });
+      await fetch(`/api/enquiries/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete enquiry error:", e);
     }
@@ -718,18 +817,65 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const saveTestimonial = async (t: Testimonial, isNew: boolean) => {
+  const submitTestimonialFeedback = async (t: Partial<Testimonial>) => {
     try {
-      const url = isNew ? "/api/testimonials" : `/api/testimonials/${t.id}`;
-      const method = isNew ? "POST" : "PUT";
-      const res = await fetch(url, {
-        method,
+      const res = await fetch("/api/testimonials", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(t),
+        body: JSON.stringify({ ...t, status: t.status || "Pending" }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        const saved = data.testimonial || t;
+        if (data.testimonial) {
+          set((s) => ({ ...s, testimonials: [data.testimonial, ...s.testimonials] }));
+        }
+        return { success: true, message: data.message || "Feedback submitted successfully" };
+      }
+      return { success: false, error: data.error || "Failed to submit feedback" };
+    } catch (e) {
+      console.error("Submit testimonial error:", e);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  };
+
+  const updateTestimonialStatus = async (id: string, status: "Pending" | "Approved" | "Rejected") => {
+    try {
+      const res = await fetch(`/api/testimonials/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        set((s) => ({
+          ...s,
+          testimonials: s.testimonials.map((t) => (t.id === id ? { ...t, status } : t)),
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.error("Update testimonial status error:", e);
+    }
+    set((s) => ({
+      ...s,
+      testimonials: s.testimonials.map((t) => (t.id === id ? { ...t, status } : t)),
+    }));
+    return true;
+  };
+
+  const saveTestimonial = async (t: Testimonial, isNew: boolean) => {
+    try {
+      const url = isNew ? "/api/testimonials" : `/api/testimonials/${encodeURIComponent(t.id)}`;
+      const method = isNew ? "POST" : "PUT";
+      const payload = { ...t, status: t.status || (isNew ? "Approved" : t.status) };
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const saved = data.testimonial || payload;
         set((s) => ({
           ...s,
           testimonials: isNew
@@ -741,22 +887,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Save testimonial error:", e);
     }
+    const fallbackItem = { ...t, status: t.status || "Approved" };
     set((s) => ({
       ...s,
       testimonials: isNew
-        ? [{ ...t, id: t.id || `t_${Date.now()}` }, ...s.testimonials]
-        : s.testimonials.map((item) => (item.id === t.id ? t : item)),
+        ? [{ ...fallbackItem, id: t.id || `t_${Date.now()}` }, ...s.testimonials]
+        : s.testimonials.map((item) => (item.id === t.id ? fallbackItem : item)),
     }));
     return true;
   };
 
   const deleteTestimonial = async (id: string) => {
     try {
-      await fetch(`/api/testimonials/${id}`, { method: "DELETE" });
+      await fetch(`/api/testimonials/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete testimonial error:", e);
     }
     set((s) => ({ ...s, testimonials: s.testimonials.filter((t) => t.id !== id) }));
+    return true;
+  };
+
+  const deleteAllTestimonials = async () => {
+    try {
+      await fetch("/api/testimonials", { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete all testimonials error:", e);
+    }
+    set((s) => ({ ...s, testimonials: [] }));
     return true;
   };
 
@@ -825,13 +982,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteBlog,
     saveCoupon,
     deleteCoupon,
+    deleteAllCoupons,
     saveCustomer,
     deleteCustomer,
+    deleteAllCustomers,
     createEnquiry,
     updateEnquiryStatus,
     deleteEnquiry,
+    submitTestimonialFeedback,
     saveTestimonial,
+    updateTestimonialStatus,
     deleteTestimonial,
+    deleteAllTestimonials,
     saveSettings,
   };
 

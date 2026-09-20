@@ -104,7 +104,7 @@ export default function ContactPage() {
             <h3 className="mt-4 font-display text-base font-bold text-primary">WhatsApp Advisory</h3>
             <p className="mt-1 text-xs text-muted-foreground">Quick crop solutions &amp; photos</p>
             <a
-              href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent("Hello PHS, I would like to get advice on crop solutions.")}`}
+              href={`https://wa.me/${(state.settings.whatsapp || state.settings.phone || COMPANY.phone).replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello PHS, I would like to get advice on crop solutions.")}`}
               target="_blank"
               rel="noreferrer"
               className="mt-3 block text-sm font-semibold text-[#128C7E] hover:underline"
@@ -121,10 +121,10 @@ export default function ContactPage() {
             <h3 className="mt-4 font-display text-base font-bold text-primary">Email Support</h3>
             <p className="mt-1 text-xs text-muted-foreground">Response within 24 business hours</p>
             <a
-              href="mailto:hello@planthealthsolutions.com"
+              href={`mailto:${state.settings.email1 || "planthealthsol@gmail.com"}`}
               className="mt-3 block text-sm font-semibold text-secondary hover:text-primary transition-colors truncate"
             >
-              hello@planthealthsolutions.com
+              {state.settings.email1 || "planthealthsol@gmail.com"}
             </a>
           </div>
 

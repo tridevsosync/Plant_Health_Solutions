@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { BlogModel } from "@/models/Blog";
-import { seedDatabase } from "@/lib/seedDb";
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    const count = await BlogModel.countDocuments();
-    if (count === 0) {
-      await seedDatabase(false);
-    }
-
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const query: Record<string, unknown> = {};
@@ -45,6 +39,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, blog });
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : "Failed to create blog";
+    return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    await connectDB();
+    const result = await BlogModel.deleteMany({});
+    return NextResponse.json({
+      success: true,
+      message: "All blogs deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : "Failed to delete all blogs";
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
   }
 }

@@ -27,6 +27,7 @@ export default function AdminBlogsPage() {
   const [isNew, setIsNew] = React.useState(false);
   const [confirmId, setConfirmId] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
 
   const save = async () => {
     if (!editing) return;
@@ -47,10 +48,14 @@ export default function AdminBlogsPage() {
 
   const handleDelete = async () => {
     if (!confirmId) return;
+    setDeleting(true);
     const ok = await deleteBlog(confirmId);
+    setDeleting(false);
     if (ok) {
       toast.success("Article deleted");
       setConfirmId(null);
+    } else {
+      toast.error("Failed to delete article");
     }
   };
 
@@ -83,60 +88,68 @@ export default function AdminBlogsPage() {
           </tr>
         </thead>
         <tbody>
-          {state.blogs.map((b) => (
-            <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/20">
-              <td className={`${td} max-w-sm font-semibold`}>
-                <div className="flex items-center gap-3">
-                  <img src={b.image} alt={b.title} className="h-10 w-14 rounded-lg object-cover border border-border" />
-                  <div>
-                    <p className="font-bold text-foreground line-clamp-1">{b.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{b.excerpt}</p>
-                  </div>
-                </div>
-              </td>
-              <td className={td}>
-                <span className="rounded-md bg-secondary/10 px-2 py-0.5 text-xs font-semibold text-secondary">
-                  {b.category}
-                </span>
-              </td>
-              <td className={td}>{b.author}</td>
-              <td className={td}>{b.date}</td>
-              <td className={td}>
-                <button
-                  onClick={() => saveBlog({ ...b, featured: !b.featured }, false)}
-                  className={`rounded-lg border border-border p-2 ${b.featured ? "text-amber-500 bg-amber-50" : "text-muted-foreground"}`}
-                  title="Toggle Featured"
-                >
-                  <Star className={`h-4 w-4 ${b.featured ? "fill-amber-400" : ""}`} />
-                </button>
-              </td>
-              <td className={td}>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setIsNew(false);
-                      setEditing(b);
-                    }}
-                    className="rounded-lg border border-border p-2 hover:bg-muted"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setConfirmId(b.id)}
-                    className="rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+          {state.blogs.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">
+                No blog articles published. Click &quot;Write Article&quot; to publish your first article.
               </td>
             </tr>
-          ))}
+          ) : (
+            state.blogs.map((b) => (
+              <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/20">
+                <td className={`${td} max-w-sm font-semibold`}>
+                  <div className="flex items-center gap-3">
+                    <img src={b.image} alt={b.title} className="h-10 w-14 rounded-lg object-cover border border-border" />
+                    <div>
+                      <p className="font-bold text-foreground line-clamp-1">{b.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{b.excerpt}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className={td}>
+                  <span className="rounded-md bg-secondary/10 px-2 py-0.5 text-xs font-semibold text-secondary">
+                    {b.category}
+                  </span>
+                </td>
+                <td className={td}>{b.author}</td>
+                <td className={td}>{b.date}</td>
+                <td className={td}>
+                  <button
+                    onClick={() => saveBlog({ ...b, featured: !b.featured }, false)}
+                    className={`rounded-lg border border-border p-2 ${b.featured ? "text-amber-500 bg-amber-50" : "text-muted-foreground"}`}
+                    title="Toggle Featured"
+                  >
+                    <Star className={`h-4 w-4 ${b.featured ? "fill-amber-400" : ""}`} />
+                  </button>
+                </td>
+                <td className={td}>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setIsNew(false);
+                        setEditing(b);
+                      }}
+                      className="rounded-lg border border-border p-2 hover:bg-muted"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmId(b.id)}
+                      className="rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </TableWrap>
 
       <Modal open={!!editing} onClose={() => setEditing(null)} title={isNew ? "Write New Article" : "Edit Article"} wide>
         {editing && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 min-w-0 w-full">
             <div className="sm:col-span-2">
               <Field label="Article Title">
                 <input
@@ -249,11 +262,17 @@ export default function AdminBlogsPage() {
           Are you sure you want to permanently remove this agronomy article from MongoDB?
         </p>
         <div className="mt-5 flex justify-end gap-2">
-          <Btn variant="ghost" onClick={() => setConfirmId(null)}>
+          <Btn variant="ghost" onClick={() => setConfirmId(null)} disabled={deleting}>
             Cancel
           </Btn>
-          <Btn variant="danger" onClick={handleDelete}>
-            Delete Article
+          <Btn variant="danger" onClick={handleDelete} disabled={deleting}>
+            {deleting ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Deleting...
+              </span>
+            ) : (
+              "Delete Article"
+            )}
           </Btn>
         </div>
       </Modal>

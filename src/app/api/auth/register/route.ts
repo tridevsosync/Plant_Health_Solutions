@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/db";
-import { UserModel } from "@/models/User";
-import { CustomerModel } from "@/models/Customer";
+import { findUserByEmail, saveNewUser } from "@/lib/authStore";
 
 export async function POST(req: NextRequest) {
   try {
-    await connectDB();
     const body = await req.json();
     const { name, email, phone, password, confirmPassword } = body;
 
@@ -16,6 +13,10 @@ export async function POST(req: NextRequest) {
     }
     if (!email || !email.trim()) {
       return NextResponse.json({ success: false, error: "Valid email is required" }, { status: 400 });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return NextResponse.json({ success: false, error: "Please enter a valid email address" }, { status: 400 });
     }
     if (!password) {
       return NextResponse.json({ success: false, error: "Password is required" }, { status: 400 });
@@ -35,49 +36,34 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    const existingUser = await UserModel.findOne({ email: cleanEmail });
+    const existingUser = await findUserByEmail(cleanEmail);
     if (existingUser) {
       return NextResponse.json(
-        { success: false, error: "An account with this email already exists" },
+        { success: false, error: "An account with this email already exists. Please sign in." },
         { status: 400 }
       );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await UserModel.create({
+    const newUser = await saveNewUser({
       name: name.trim(),
       email: cleanEmail,
       phone: phone ? phone.trim() : "",
-      password: hashedPassword,
+      passwordHash: hashedPassword,
       role: "user",
-      addresses: [],
     });
-
-    // Also register in Customer model for Admin management
-    const existingCustomer = await CustomerModel.findOne({ email: cleanEmail });
-    if (!existingCustomer) {
-      await CustomerModel.create({
-        id: `c_${Date.now()}`,
-        name: name.trim(),
-        email: cleanEmail,
-        phone: phone ? phone.trim() : "",
-        city: "Karnataka",
-        orders: 0,
-        active: true,
-      });
-    }
 
     return NextResponse.json({
       success: true,
       message: "Registration successful",
       user: {
-        id: newUser._id.toString(),
+        id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        phone: newUser.phone,
+        phone: newUser.phone || "",
         role: newUser.role,
-        addresses: newUser.addresses,
+        addresses: newUser.addresses || [],
       },
     });
   } catch (error: unknown) {
@@ -86,3 +72,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
   }
 }
+

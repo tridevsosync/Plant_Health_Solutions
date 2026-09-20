@@ -4,9 +4,10 @@ import * as React from "react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Grid3X3, List, Search, SlidersHorizontal, X, ArrowRight, Eye, Check } from "lucide-react";
+import { Grid3X3, List, Search, SlidersHorizontal, X, ArrowRight, Eye, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard, Stars } from "@/components/site/ProductCard";
+import { Pagination } from "@/components/site/Pagination";
 import { PageHero } from "@/components/site/Section";
 import type { Product } from "@/lib/data";
 import { inr, useApp } from "@/lib/store";
@@ -20,6 +21,7 @@ function CatalogContent() {
 
   const queryQ = searchParams?.get("q") ?? "";
   const queryCat = searchParams?.get("category") ?? "";
+  const queryPage = parseInt(searchParams?.get("page") ?? "1", 10) || 1;
 
   const [q, setQ] = React.useState(queryQ);
   const [category, setCategory] = React.useState(queryCat);
@@ -28,11 +30,15 @@ function CatalogContent() {
   const [sort, setSort] = React.useState("popular");
   const [view, setView] = React.useState<"grid" | "list">("grid");
   const [quick, setQuick] = React.useState<Product | null>(null);
+  const [mobileFilterOpen, setMobileFilterOpen] = React.useState(false);
+  const [page, setPage] = React.useState(queryPage);
+  const [pageSize, setPageSize] = React.useState(9);
 
   React.useEffect(() => {
     setQ(queryQ);
     setCategory(queryCat);
-  }, [queryQ, queryCat]);
+    setPage(queryPage);
+  }, [queryQ, queryCat, queryPage]);
 
   const list = React.useMemo(() => {
     let out = state.products.filter((p) => {
@@ -43,10 +49,15 @@ function CatalogContent() {
         p.category.toLowerCase().includes(q.toLowerCase()) ||
         (p.ingredients && p.ingredients.toLowerCase().includes(q.toLowerCase()));
 
+      const normCat = normalize(category);
+      const normPCat = normalize(p.category);
       const matchCat =
         !category ||
+        category === "All" ||
         p.category.toLowerCase() === category.toLowerCase() ||
-        normalize(p.category) === normalize(category);
+        normPCat === normCat ||
+        normPCat.includes(normCat) ||
+        normCat.includes(normPCat);
 
       const matchPrice = maxPrice >= 5000 ? true : p.price <= maxPrice;
       const matchStock = !inStock || p.stock > 0;
@@ -64,8 +75,15 @@ function CatalogContent() {
     return out;
   }, [state.products, q, category, maxPrice, inStock, sort]);
 
+  const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, list.length);
+  const paginatedList = list.slice(startIndex, endIndex);
+
   const applyCategory = (catName: string) => {
     setCategory(catName);
+    setPage(1);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (catName) params.set("category", catName);
@@ -75,11 +93,39 @@ function CatalogContent() {
 
   const handleSearch = (val: string) => {
     setQ(val);
+    setPage(1);
     const params = new URLSearchParams();
     if (val) params.set("q", val);
     if (category) params.set("category", category);
     const qs = params.toString();
     router.push(`/products${qs ? `?${qs}` : ""}`);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const target = Math.min(Math.max(1, newPage), totalPages);
+    setPage(target);
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (category) params.set("category", category);
+    if (target > 1) params.set("page", String(target));
+    const qs = params.toString();
+    router.push(`/products${qs ? `?${qs}` : ""}`, { scroll: false });
+
+    // Smooth scroll to catalog products header
+    const el = document.getElementById("catalog-products-container");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setPage(1);
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (category) params.set("category", category);
+    const qs = params.toString();
+    router.push(`/products${qs ? `?${qs}` : ""}`, { scroll: false });
   };
 
   return (
@@ -90,28 +136,46 @@ function CatalogContent() {
         image="https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=1920&q=70"
       />
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 lg:grid-cols-[280px_1fr]">
-        {/* Left Sidebar Filter */}
-        <aside className="h-fit rounded-2xl border border-border bg-card p-5 shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <h3 className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
-              <SlidersHorizontal className="h-4 w-4 text-primary" /> Filter Products
-            </h3>
-            {(category || q || inStock || maxPrice < 5000) && (
-              <button
-                onClick={() => {
-                  setQ("");
-                  setCategory("");
-                  setMaxPrice(5000);
-                  setInStock(false);
-                  router.push("/products");
-                }}
-                className="text-xs font-bold text-destructive hover:underline"
-              >
-                Clear All
-              </button>
-            )}
-          </div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-6">
+          <button
+            type="button"
+            onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+            className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-sm font-bold text-foreground shadow-xs"
+          >
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-primary" /> Filter &amp; Search Products
+              {(category || q || inStock || maxPrice < 5000) && (
+                <span className="h-2 w-2 rounded-full bg-primary" />
+              )}
+            </span>
+            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${mobileFilterOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+          {/* Left Sidebar Filter */}
+          <aside className={`h-fit rounded-2xl border border-border bg-card p-5 shadow-xs space-y-6 ${mobileFilterOpen ? "block mb-6 lg:mb-0" : "hidden"} lg:block`}>
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
+                <SlidersHorizontal className="h-4 w-4 text-primary" /> Filter Products
+              </h3>
+              {(category || q || inStock || maxPrice < 5000) && (
+                <button
+                  onClick={() => {
+                    setQ("");
+                    setCategory("");
+                    setMaxPrice(5000);
+                    setInStock(false);
+                    router.push("/products");
+                  }}
+                  className="text-xs font-bold text-destructive hover:underline"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
 
           {/* Search box */}
           <div>
@@ -218,18 +282,25 @@ function CatalogContent() {
         </aside>
 
         {/* Right Content */}
-        <div>
+        <div id="catalog-products-container" className="scroll-mt-6">
           {/* Top Filter & Sort Bar */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-3.5 shadow-sm">
             <div>
               <p className="text-sm text-muted-foreground">
-                Showing <strong className="text-foreground">{list.length}</strong> of{" "}
-                <strong>{state.products.length}</strong> products
-                {category ? (
+                {list.length === 0 ? (
+                  "No products found"
+                ) : (
                   <>
-                    {" "}in <span className="font-bold text-primary">&ldquo;{category}&rdquo;</span>
+                    Showing <strong className="text-foreground">{startIndex + 1}</strong>–
+                    <strong className="text-foreground">{endIndex}</strong> of{" "}
+                    <strong className="text-foreground">{list.length}</strong> products
+                    {category ? (
+                      <>
+                        {" "}in <span className="font-bold text-primary">&ldquo;{category}&rdquo;</span>
+                      </>
+                    ) : null}
                   </>
-                ) : null}
+                )}
               </p>
             </div>
 
@@ -238,7 +309,10 @@ function CatalogContent() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:inline">Sort:</span>
                 <select
                   value={sort}
-                  onChange={(e) => setSort(e.target.value)}
+                  onChange={(e) => {
+                    setSort(e.target.value);
+                    setPage(1);
+                  }}
                   className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold outline-none focus:border-primary"
                 >
                   <option value="popular">Most Popular</option>
@@ -310,6 +384,7 @@ function CatalogContent() {
                   setCategory("");
                   setMaxPrice(5000);
                   setInStock(false);
+                  setPage(1);
                   router.push("/products");
                 }}
                 className="mt-5 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-primary-foreground shadow hover:opacity-90 transition-all"
@@ -318,14 +393,28 @@ function CatalogContent() {
               </button>
             </div>
           ) : (
-            <div className={view === "grid" ? "grid gap-5 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-5"}>
-              {list.map((p) => (
-                <ProductCard key={p.id} product={p} view={view} onQuickView={setQuick} />
-              ))}
-            </div>
+            <>
+              <div className={view === "grid" ? "grid gap-5 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-5"}>
+                {paginatedList.map((p) => (
+                  <ProductCard key={p.id} product={p} view={view} onQuickView={setQuick} />
+                ))}
+              </div>
+
+              {/* Pagination controls */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={list.length}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                pageSizeOptions={[6, 9, 12, 18, 24]}
+              />
+            </>
           )}
         </div>
       </div>
+    </div>
 
       {/* Quick View Modal */}
       {quick && (

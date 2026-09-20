@@ -6,13 +6,14 @@ import { useParams, useRouter } from "next/navigation";
 import { Check, Minus, Plus, ShieldCheck, Truck, ArrowLeft, Heart, ShoppingCart, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard, Stars } from "@/components/site/ProductCard";
-import { inr, useApp } from "@/lib/store";
+import { inr, useApp, useUser } from "@/lib/store";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const id = (params?.id as string) ?? "";
   const router = useRouter();
   const { state, set, addToCart, toggleWishlist } = useApp();
+  const user = useUser();
   const product = state.products.find((p) => p.id === id);
   const [qty, setQty] = React.useState(1);
   const [tab, setTab] = React.useState("description");
@@ -60,21 +61,16 @@ export default function ProductDetailPage() {
           name: form.name.trim(),
           rating: Number(form.rating),
           comment: form.comment.trim(),
+          status: "Pending",
         }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
-        const savedReview = data.review;
-        set((s) => ({
-          ...s,
-          reviews: [savedReview, ...s.reviews],
-          products: s.products.map((p) =>
-            p.id === product.id ? { ...p, reviews: p.reviews + 1 } : p
-          ),
-        }));
         setForm({ name: "", rating: 5, comment: "" });
-        toast.success("Thank you for reviewing! Your feedback has been recorded.");
+        toast.success(
+          "Thank you! Your product review has been submitted for verification. It will appear on this product once approved by admin."
+        );
       } else {
         toast.error(data.error || "Failed to post review");
       }
@@ -230,7 +226,12 @@ export default function ProductDetailPage() {
                 disabled={product.stock === 0}
                 onClick={() => {
                   addToCart(product.id, qty);
-                  router.push("/checkout");
+                  if (!user) {
+                    toast.info("Please sign in to proceed with your order");
+                    router.push("/login?redirect=/checkout");
+                  } else {
+                    router.push("/checkout");
+                  }
                 }}
                 className="rounded-full bg-accent px-8 py-3 text-sm font-bold text-accent-foreground shadow-md hover:opacity-95 disabled:opacity-50 transition-all active:scale-95"
               >

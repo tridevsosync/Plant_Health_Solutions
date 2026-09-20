@@ -10,6 +10,8 @@ export default function AdminEnquiriesPage() {
   const { state, updateEnquiryStatus, deleteEnquiry } = useApp();
   const [filter, setFilter] = React.useState("All");
   const [q, setQ] = React.useState("");
+  const [confirmId, setConfirmId] = React.useState<string | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
 
   const list = state.enquiries.filter(
     (e) =>
@@ -28,10 +30,16 @@ export default function AdminEnquiriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const ok = await deleteEnquiry(id);
+  const handleDelete = async () => {
+    if (!confirmId) return;
+    setDeleting(true);
+    const ok = await deleteEnquiry(confirmId);
+    setDeleting(false);
     if (ok) {
       toast.success("Enquiry deleted");
+      setConfirmId(null);
+    } else {
+      toast.error("Failed to delete enquiry");
     }
   };
 
@@ -71,8 +79,15 @@ export default function AdminEnquiriesPage() {
           </tr>
         </thead>
         <tbody>
-          {list.map((e) => (
-            <tr key={e.id} className="border-b border-border last:border-0 hover:bg-muted/20">
+          {list.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">
+                No farmer enquiries found.
+              </td>
+            </tr>
+          ) : (
+            list.map((e) => (
+              <tr key={e.id} className="border-b border-border last:border-0 hover:bg-muted/20">
               <td className={`${td} font-bold text-foreground`}>{e.name}</td>
               <td className={td}>
                 <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
@@ -112,7 +127,7 @@ export default function AdminEnquiriesPage() {
               </td>
               <td className={td}>
                 <button
-                  onClick={() => handleDelete(e.id)}
+                  onClick={() => setConfirmId(e.id)}
                   className="rounded-lg border border-border p-2 text-destructive hover:bg-destructive/10"
                   title="Delete Enquiry"
                 >
@@ -120,9 +135,36 @@ export default function AdminEnquiriesPage() {
                 </button>
               </td>
             </tr>
-          ))}
+          )))}
         </tbody>
       </TableWrap>
+
+      {confirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-background p-6 shadow-xl">
+            <h3 className="font-display text-lg font-bold text-foreground">Delete enquiry?</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Are you sure you want to delete this enquiry from MongoDB?
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmId(null)}
+                className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="rounded-xl bg-destructive px-4 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete Enquiry"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminPage>
   );
 }

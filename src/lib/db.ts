@@ -1,10 +1,7 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "";
-
-if (!MONGODB_URI) {
-  console.warn("MONGODB_URI is not defined in environment variables.");
-}
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/plant_health_solutions";
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -22,7 +19,7 @@ if (!global.mongooseCache) {
 }
 
 export async function connectDB() {
-  if (cached.conn) {
+  if (cached.conn && cached.conn.connection.readyState === 1) {
     return cached.conn;
   }
 
@@ -30,6 +27,7 @@ export async function connectDB() {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
       dbName: "plant_health_solutions",
+      serverSelectionTimeoutMS: 3000,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
@@ -42,9 +40,10 @@ export async function connectDB() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error("MongoDB connection error:", e);
+    console.warn("MongoDB connection not established; falling back to in-memory store:", (e as Error).message);
     throw e;
   }
 
   return cached.conn;
 }
+
