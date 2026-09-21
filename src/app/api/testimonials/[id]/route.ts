@@ -19,7 +19,9 @@ export async function PUT(
   try {
     await connectDB();
     const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
-    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
+    const query = isObjectId
+      ? { $or: [{ id: clean }, { _id: new mongoose.Types.ObjectId(clean) }, { _id: clean }] }
+      : { $or: [{ id: clean }, { id: new RegExp(`^${clean}$`, "i") }] };
 
     const updated = await TestimonialModel.findOneAndUpdate(
       query,
@@ -31,7 +33,13 @@ export async function PUT(
       return NextResponse.json({ success: true, testimonial: { id: clean, ...body } });
     }
 
-    return NextResponse.json({ success: true, testimonial: updated });
+    return NextResponse.json({
+      success: true,
+      testimonial: {
+        ...updated.toObject(),
+        id: updated.id || String(updated._id),
+      },
+    });
   } catch (error: unknown) {
     console.warn("Testimonial PUT fallback:", (error as Error).message);
     return NextResponse.json({ success: true, testimonial: { id: clean, ...body } });
@@ -48,7 +56,10 @@ export async function DELETE(
   try {
     await connectDB();
     const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
-    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
+    const query = isObjectId
+      ? { $or: [{ id: clean }, { _id: new mongoose.Types.ObjectId(clean) }, { _id: clean }] }
+      : { $or: [{ id: clean }, { id: new RegExp(`^${clean}$`, "i") }] };
+
     const deleted = await TestimonialModel.deleteMany(query);
 
     return NextResponse.json({

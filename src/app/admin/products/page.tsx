@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Pencil, Plus, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { inr, useApp } from "@/lib/store";
 import type { Product } from "@/lib/data";
@@ -20,6 +20,8 @@ const blank = (category: string): Product => ({
   stock: 100,
   unit: "1 L",
   image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=70",
+  image2: "",
+  images: ["https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=70"],
   description: "",
   benefits: [],
   usage: "",
@@ -59,8 +61,19 @@ export default function AdminProductsPage() {
       toast.error("Product name is required");
       return;
     }
+    const productImages = [editing.image, editing.image2]
+      .filter(Boolean)
+      .slice(0, 2) as string[];
+
+    const finalProduct: Product = {
+      ...editing,
+      image: editing.image || (editing.image2 ? editing.image2 : ""),
+      image2: editing.image2 || "",
+      images: productImages,
+    };
+
     setSaving(true);
-    const ok = await saveProduct(editing, isNew);
+    const ok = await saveProduct(finalProduct, isNew);
     setSaving(false);
     if (ok) {
       toast.success(isNew ? "Product created in MongoDB" : "Product updated in MongoDB");
@@ -274,13 +287,47 @@ export default function AdminProductsPage() {
               />
             </Field>
 
-            <div className="sm:col-span-2">
-              <ImageUploader
-                label="Product Image (Cloudinary)"
-                value={editing.image}
-                onChange={(url) => setEditing({ ...editing, image: url })}
-                folder="plant_health_solutions/products"
-              />
+            {/* Product Images (Max 2 Allowed) */}
+            <div className="sm:col-span-2 rounded-2xl border border-border bg-muted/20 p-4 sm:p-5 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-3">
+                <div>
+                  <h4 className="font-display text-sm font-bold text-foreground flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-primary" /> Product Images (Max 2 Allowed)
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    Upload or paste up to 2 product images. Image 1 is the main catalog display, and Image 2 provides an alternate angle in the product gallery.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                  {[editing.image, editing.image2].filter(Boolean).length} / 2 Images Added
+                </span>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-primary">
+                    Image 1 (Main Product View) *
+                  </span>
+                  <ImageUploader
+                    label="Primary Image"
+                    value={editing.image}
+                    onChange={(url) => setEditing({ ...editing, image: url })}
+                    folder="plant_health_solutions/products"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Image 2 (Secondary View - Optional)
+                  </span>
+                  <ImageUploader
+                    label="Secondary Image (Angle 2)"
+                    value={editing.image2 || ""}
+                    onChange={(url) => setEditing({ ...editing, image2: url })}
+                    folder="plant_health_solutions/products"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="sm:col-span-2">

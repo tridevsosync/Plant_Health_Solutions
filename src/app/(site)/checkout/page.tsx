@@ -55,9 +55,25 @@ interface RazorpayOptions {
   };
 }
 
+interface RazorpayErrorResponse {
+  error?: {
+    code?: string;
+    description?: string;
+    source?: string;
+    step?: string;
+    reason?: string;
+    metadata?: Record<string, unknown>;
+  };
+}
+
+interface RazorpayInstance {
+  open: () => void;
+  on: (event: string, callback: (response: RazorpayErrorResponse) => void) => void;
+}
+
 declare global {
   interface Window {
-    Razorpay?: new (opts: RazorpayOptions) => { open: () => void };
+    Razorpay?: new (opts: RazorpayOptions) => RazorpayInstance;
   }
 }
 
@@ -142,11 +158,28 @@ export default function CheckoutPage() {
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + shipping + tax;
 
+  // Preload Razorpay Script on mount so checkout modal is immediately responsive
+  React.useEffect(() => {
+    loadRazorpayScript();
+  }, []);
+
   // Load Razorpay Script
   const loadRazorpayScript = () => {
     return new Promise<boolean>((resolve) => {
       if (typeof window === "undefined") return resolve(false);
       if (window.Razorpay) return resolve(true);
+      const existingScript = document.querySelector<HTMLScriptElement>(
+        'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+      );
+      if (existingScript) {
+        if (window.Razorpay) return resolve(true);
+        existingScript.addEventListener("load", () => resolve(true));
+        existingScript.addEventListener("error", () => resolve(false));
+        setTimeout(() => {
+          resolve(!!window.Razorpay);
+        }, 2000);
+        return;
+      }
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
@@ -407,16 +440,29 @@ export default function CheckoutPage() {
       const scriptLoaded = await loadRazorpayScript();
 
       if (scriptLoaded && window.Razorpay) {
-        const razorpayKey = createOrderData.key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_PHS2026DemoKey";
+        const razorpayKey =
+          createOrderData.keyId ||
+          createOrderData.key_id ||
+          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+          "rzp_test_T7ub9uRXOT69Du";
+
+        const orderAmount =
+          createOrderData.amount ||
+          createOrderData.order?.amount ||
+          Math.round(total * 100);
+
+        const orderId =
+          createOrderData.orderId ||
+          createOrderData.order?.id;
 
         const options: RazorpayOptions = {
           key: razorpayKey,
-          amount: createOrderData.order.amount,
+          amount: orderAmount,
           currency: "INR",
           name: state.settings.name || "Plant Health Solutions Pvt. Ltd.",
           description: `Bio Fertilizers & Crop Care Purchase (${lines.length} items)`,
           image: "/logo.png",
-          order_id: createOrderData.order.id,
+          ...(orderId && !createOrderData.simulated ? { order_id: orderId } : {}),
           prefill: {
             name: addr.name,
             email: user.email || addr.email,
@@ -464,33 +510,24 @@ export default function CheckoutPage() {
 
         try {
           const rzp = new window.Razorpay(options);
-          rzp.open();
-        } catch {
-          // Fallback simulation for sandbox / test environment
-          toast.success("Processing Razorpay test payment...");
-          await executeOrderCreation({
-            paymentMethod: "Razorpay (Online Payment)",
-            paymentId: `pay_test_${Math.random().toString(36).substring(2, 11)}`,
-            paymentStatus: "Paid",
+          rzp.on("payment.failed", function (response: RazorpayErrorResponse) {
+            toast.error(response.error?.description || "Payment failed. Please try again.");
+            setSubmitting(false);
           });
+          rzp.open();
+        } catch (modalErr) {
+          console.error("Razorpay modal error:", modalErr);
+          toast.error("Failed to open Razorpay modal. Please check your network connection.");
+          setSubmitting(false);
         }
       } else {
-        // Fallback simulation if network blocks Razorpay CDN
-        toast.success("Processing Razorpay payment...");
-        await executeOrderCreation({
-          paymentMethod: "Razorpay (Online Payment)",
-          paymentId: `pay_sim_${Date.now()}`,
-          paymentStatus: "Paid",
-        });
+        toast.error("Unable to load Razorpay payment gateway script. Please check your internet connection and try again.");
+        setSubmitting(false);
       }
     } catch (err: unknown) {
-      console.warn("Razorpay flow error, falling back to simulated order placement:", err);
-      toast.success("Proceeding with Razorpay payment confirmation...");
-      await executeOrderCreation({
-        paymentMethod: "Razorpay (Online Payment)",
-        paymentId: `pay_rzp_${Date.now()}`,
-        paymentStatus: "Paid",
-      });
+      console.error("Razorpay order initiation error:", err);
+      toast.error((err as Error).message || "Payment initiation failed. Please try again.");
+      setSubmitting(false);
     }
   };
 

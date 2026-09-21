@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Building2,
   Phone,
@@ -17,12 +18,18 @@ import {
   ShieldCheck,
   ExternalLink,
   MessageCircle,
+  FlaskConical,
+  Clock,
+  LayoutTemplate,
+  Send,
+  Image as ImageIcon,
+  Compass,
 } from "lucide-react";
 import { toast } from "sonner";
 import { inr, useApp, type Settings } from "@/lib/store";
 import { AdminPage, Btn, Field, Panel, inputCls } from "@/components/site/AdminUI";
 
-type TabKey = "general" | "contact" | "store" | "social";
+type TabKey = "general" | "contact" | "contactPage" | "store" | "social";
 
 export default function AdminSettingsPage() {
   const { state, saveSettings, refreshData } = useApp();
@@ -63,6 +70,7 @@ export default function AdminSettingsPage() {
   const tabs: { id: TabKey; label: string; icon: React.ElementType }[] = [
     { id: "general", label: "Company Profile", icon: Building2 },
     { id: "contact", label: "Contact & Helplines", icon: Phone },
+    { id: "contactPage", label: "Contact Page Customizer", icon: LayoutTemplate },
     { id: "store", label: "Store & Shipping", icon: Truck },
     { id: "social", label: "Social Links", icon: Globe },
   ];
@@ -70,7 +78,7 @@ export default function AdminSettingsPage() {
   return (
     <AdminPage
       title="Company & Website Settings"
-      subtitle="Configure company identity, contact numbers, announcement banners, shipping thresholds, and social links saved in MongoDB Atlas."
+      subtitle="Configure company identity, contact numbers, Contact Us page details, announcement banners, shipping thresholds, and social links saved in MongoDB Atlas."
       action={
         <div className="flex items-center gap-2">
           <Btn variant="ghost" onClick={handleReset} disabled={saving}>
@@ -101,14 +109,23 @@ export default function AdminSettingsPage() {
             <p className="text-[11px] text-muted-foreground">
               {lastSaved
                 ? `Last updated: ${lastSaved.toLocaleTimeString()}`
-                : "Live configuration active across client, checkout, invoice headers & footers."}
+                : "Live configuration active across client, Contact page, checkout, invoice headers & footers."}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-secondary font-semibold">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          Live Website Connected
+        <div className="flex items-center gap-3 text-xs">
+          <Link
+            href="/contact"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 font-semibold text-primary hover:bg-muted transition-colors shadow-2xs"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> View Live /contact
+          </Link>
+          <div className="flex items-center gap-1.5 text-secondary font-semibold">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            Live Website Connected
+          </div>
         </div>
       </div>
 
@@ -196,22 +213,20 @@ export default function AdminSettingsPage() {
             {activeTab === "contact" && (
               <div className="space-y-5">
                 <div>
-                  <h3 className="font-display text-base font-bold text-foreground">Communication Channels</h3>
+                  <h3 className="font-display text-base font-bold text-foreground">Communication Channels & Timings</h3>
                   <p className="text-xs text-muted-foreground">
-                    Public phone numbers, WhatsApp assistance, and email addresses.
+                    Public phone numbers, WhatsApp assistance, email addresses, and general office timings.
                   </p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Primary Helpline Phone">
-                    <div className="relative">
-                      <input
-                        className={inputCls}
-                        value={form.phone || ""}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        placeholder="+91 91759 55009"
-                      />
-                    </div>
+                    <input
+                      className={inputCls}
+                      value={form.phone || ""}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="+91 91759 55009"
+                    />
                   </Field>
 
                   <Field label="WhatsApp Support Number">
@@ -243,8 +258,20 @@ export default function AdminSettingsPage() {
                     />
                   </Field>
 
+                  <Field label="Working / Operating Hours">
+                    <input
+                      className={inputCls}
+                      value={form.workingHours || ""}
+                      onChange={(e) => setForm({ ...form, workingHours: e.target.value })}
+                      placeholder="e.g. Mon – Sat: 9:00 AM – 6:30 PM"
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Displayed on the Contact page, Helpline cards, and customer invoices.
+                    </p>
+                  </Field>
+
                   <div className="sm:col-span-2">
-                    <Field label="Research Center & Head Office Address">
+                    <Field label="Research Center & Head Office Postal Address">
                       <textarea
                         rows={3}
                         className={inputCls}
@@ -258,7 +285,313 @@ export default function AdminSettingsPage() {
               </div>
             )}
 
-            {/* Tab 3: Store & Shipping */}
+            {/* Tab 3: Contact Page Customizer */}
+            {activeTab === "contactPage" && (
+              <div className="space-y-8">
+                {/* Section 1: Hero Header */}
+                <div className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4 sm:p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <Sparkles className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h3 className="font-display text-sm font-bold text-foreground">
+                        1. Contact Hero Header &amp; Banner
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        Main top banner badge, heading, description, and cover image on `/contact`.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Hero Badge Text">
+                      <input
+                        className={inputCls}
+                        value={form.contactHeroBadge || ""}
+                        onChange={(e) => setForm({ ...form, contactHeroBadge: e.target.value })}
+                        placeholder="e.g. Direct Farmer & Dealer Support"
+                      />
+                    </Field>
+
+                    <Field label="Hero Main Heading">
+                      <input
+                        className={inputCls}
+                        value={form.contactHeroTitle || ""}
+                        onChange={(e) => setForm({ ...form, contactHeroTitle: e.target.value })}
+                        placeholder="e.g. Get in Touch with Our Agronomists"
+                      />
+                    </Field>
+
+                    <div className="sm:col-span-2">
+                      <Field label="Hero Subtitle / Description">
+                        <textarea
+                          rows={2}
+                          className={inputCls}
+                          value={form.contactHeroSubtitle || ""}
+                          onChange={(e) => setForm({ ...form, contactHeroSubtitle: e.target.value })}
+                          placeholder="e.g. Whether you need crop advice, soil test recommendations, dealership inquiries..."
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <Field label="Hero Background Image URL">
+                        <input
+                          type="url"
+                          className={inputCls}
+                          value={form.contactHeroImage || ""}
+                          onChange={(e) => setForm({ ...form, contactHeroImage: e.target.value })}
+                          placeholder="https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1920&q=80"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Facility & Location Card */}
+                <div className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4 sm:p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <MapPin className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h3 className="font-display text-sm font-bold text-foreground">
+                        2. Research Center &amp; Google Maps
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        Facility title, description, photo preview, and Google Maps direction link on the right column.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Facility / Center Name">
+                      <input
+                        className={inputCls}
+                        value={form.facilityName || ""}
+                        onChange={(e) => setForm({ ...form, facilityName: e.target.value })}
+                        placeholder="e.g. Horticulture Research & Extension Center"
+                      />
+                    </Field>
+
+                    <Field label="Facility Location Title / Caption">
+                      <input
+                        className={inputCls}
+                        value={form.facilityLocationTitle || ""}
+                        onChange={(e) => setForm({ ...form, facilityLocationTitle: e.target.value })}
+                        placeholder="e.g. Tidagundi, Vijayapura (NH-52)"
+                      />
+                    </Field>
+
+                    <div className="sm:col-span-2">
+                      <Field label="Facility Description / Facilities Offered">
+                        <textarea
+                          rows={2}
+                          className={inputCls}
+                          value={form.facilityDescription || ""}
+                          onChange={(e) => setForm({ ...form, facilityDescription: e.target.value })}
+                          placeholder="e.g. Our 40-acre center on National Highway 52 houses state-of-the-art microbiology testing..."
+                        />
+                      </Field>
+                    </div>
+
+                    <Field label="Facility Photo Image URL">
+                      <input
+                        type="url"
+                        className={inputCls}
+                        value={form.facilityImage || ""}
+                        onChange={(e) => setForm({ ...form, facilityImage: e.target.value })}
+                        placeholder="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80"
+                      />
+                    </Field>
+
+                    <Field label="Google Maps Directions URL">
+                      <input
+                        type="url"
+                        className={inputCls}
+                        value={form.googleMapsUrl || ""}
+                        onChange={(e) => setForm({ ...form, googleMapsUrl: e.target.value })}
+                        placeholder="https://maps.google.com/?q=Plant+Health+Solutions+Tidagundi+Vijayapura"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* Section 3: Enquiry Form Details */}
+                <div className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4 sm:p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <Send className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h3 className="font-display text-sm font-bold text-foreground">
+                        3. Enquiry Form Headings
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        Headings displayed above the farmer query submission form.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Enquiry Form Title">
+                      <input
+                        className={inputCls}
+                        value={form.enquiryFormTitle || ""}
+                        onChange={(e) => setForm({ ...form, enquiryFormTitle: e.target.value })}
+                        placeholder="e.g. Send an Enquiry"
+                      />
+                    </Field>
+
+                    <div className="sm:col-span-2">
+                      <Field label="Enquiry Form Subtitle / Instructions">
+                        <textarea
+                          rows={2}
+                          className={inputCls}
+                          value={form.enquiryFormSubtitle || ""}
+                          onChange={(e) => setForm({ ...form, enquiryFormSubtitle: e.target.value })}
+                          placeholder="e.g. Fill out the form below and our agronomy extension team will review your query..."
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Promotional Banners */}
+                <div className="space-y-5 rounded-2xl border border-border bg-muted/20 p-4 sm:p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <Building2 className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h3 className="font-display text-sm font-bold text-foreground">
+                        4. Dealership &amp; Soil Testing Feature Cards
+                      </h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        Bottom promotional cards offering distribution partnerships and laboratory soil testing.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dealership Card Sub-section */}
+                  <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                    <h4 className="text-xs font-bold text-primary flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5" /> Card 1: Dealership Distribution Network
+                    </h4>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Badge Text">
+                        <input
+                          className={inputCls}
+                          value={form.dealerBadge || ""}
+                          onChange={(e) => setForm({ ...form, dealerBadge: e.target.value })}
+                          placeholder="Distribution Network"
+                        />
+                      </Field>
+
+                      <Field label="Card Title">
+                        <input
+                          className={inputCls}
+                          value={form.dealerTitle || ""}
+                          onChange={(e) => setForm({ ...form, dealerTitle: e.target.value })}
+                          placeholder="Become an Authorized Dealer"
+                        />
+                      </Field>
+
+                      <div className="sm:col-span-2">
+                        <Field label="Card Description">
+                          <textarea
+                            rows={2}
+                            className={inputCls}
+                            value={form.dealerDesc || ""}
+                            onChange={(e) => setForm({ ...form, dealerDesc: e.target.value })}
+                            placeholder="Join our 300+ strong dealer network..."
+                          />
+                        </Field>
+                      </div>
+
+                      <Field label="Button Text">
+                        <input
+                          className={inputCls}
+                          value={form.dealerButtonText || ""}
+                          onChange={(e) => setForm({ ...form, dealerButtonText: e.target.value })}
+                          placeholder="Inquire for Dealership →"
+                        />
+                      </Field>
+
+                      <Field label="Pre-filled WhatsApp Message">
+                        <input
+                          className={inputCls}
+                          value={form.dealerWhatsappText || ""}
+                          onChange={(e) => setForm({ ...form, dealerWhatsappText: e.target.value })}
+                          placeholder="Hello, I am interested in dealership registration with Plant Health Solutions."
+                        />
+                      </Field>
+                    </div>
+                  </div>
+
+                  {/* Free Soil Testing Sub-section */}
+                  <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                    <h4 className="text-xs font-bold text-primary flex items-center gap-1.5">
+                      <FlaskConical className="h-3.5 w-3.5" /> Card 2: Free Soil &amp; Water Testing
+                    </h4>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Badge Text">
+                        <input
+                          className={inputCls}
+                          value={form.soilTestingBadge || ""}
+                          onChange={(e) => setForm({ ...form, soilTestingBadge: e.target.value })}
+                          placeholder="Soil Health"
+                        />
+                      </Field>
+
+                      <Field label="Card Title">
+                        <input
+                          className={inputCls}
+                          value={form.soilTestingTitle || ""}
+                          onChange={(e) => setForm({ ...form, soilTestingTitle: e.target.value })}
+                          placeholder="Free Soil & Water Testing"
+                        />
+                      </Field>
+
+                      <div className="sm:col-span-2">
+                        <Field label="Card Description">
+                          <textarea
+                            rows={2}
+                            className={inputCls}
+                            value={form.soilTestingDesc || ""}
+                            onChange={(e) => setForm({ ...form, soilTestingDesc: e.target.value })}
+                            placeholder="Bring or courier your soil and water sample to our Tidagundi lab..."
+                          />
+                        </Field>
+                      </div>
+
+                      <Field label="Button Text">
+                        <input
+                          className={inputCls}
+                          value={form.soilTestingButtonText || ""}
+                          onChange={(e) => setForm({ ...form, soilTestingButtonText: e.target.value })}
+                          placeholder="Explore Crop Solutions →"
+                        />
+                      </Field>
+
+                      <Field label="Button Redirect Link URL">
+                        <input
+                          className={inputCls}
+                          value={form.soilTestingLinkUrl || ""}
+                          onChange={(e) => setForm({ ...form, soilTestingLinkUrl: e.target.value })}
+                          placeholder="/farmer-solutions"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 4: Store & Shipping */}
             {activeTab === "store" && (
               <div className="space-y-5">
                 <div>
@@ -316,7 +649,7 @@ export default function AdminSettingsPage() {
               </div>
             )}
 
-            {/* Tab 4: Social Links */}
+            {/* Tab 5: Social Links */}
             {activeTab === "social" && (
               <div className="space-y-5">
                 <div>
@@ -373,7 +706,7 @@ export default function AdminSettingsPage() {
             {/* Action Bar inside Panel */}
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border">
               <span className="text-xs text-muted-foreground">
-                Click <strong>Save Changes</strong> to broadcast updates immediately.
+                Click <strong>Save Changes</strong> to broadcast updates immediately across the website.
               </span>
               <div className="flex gap-2">
                 <Btn variant="ghost" onClick={handleReset} disabled={saving}>
@@ -401,6 +734,49 @@ export default function AdminSettingsPage() {
             <h3 className="font-display text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" /> Live Store Preview
             </h3>
+
+            {/* Contact Page Live Card Preview */}
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground mb-1">
+                Contact Page Facility Card:
+              </p>
+              <div className="rounded-2xl border border-border bg-card p-3.5 text-xs space-y-2.5 shadow-2xs">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-secondary shrink-0" />
+                  <p className="font-bold text-primary line-clamp-1">
+                    {form.facilityName || "Horticulture Research & Extension Center"}
+                  </p>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                  {form.facilityDescription ||
+                    "Our 40-acre center on National Highway 52 houses state-of-the-art microbiology testing..."}
+                </p>
+
+                <div className="space-y-1.5 pt-2 border-t border-border/70 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3 w-3 text-secondary shrink-0" />
+                    <span className="text-foreground font-medium">{form.phone || "+91 91759 55009"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3 w-3 text-secondary shrink-0" />
+                    <span className="truncate">{form.email1 || "planthealthsol@gmail.com"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3 text-secondary shrink-0" />
+                    <span>{form.workingHours || "Mon – Sat: 9:00 AM – 6:30 PM"}</span>
+                  </div>
+                </div>
+
+                {form.googleMapsUrl && (
+                  <div className="pt-1">
+                    <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/40 py-1.5 text-[11px] font-semibold text-primary">
+                      <ExternalLink className="h-3 w-3" /> Open in Google Maps
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Top Bar Preview */}
             <div>
@@ -451,6 +827,16 @@ export default function AdminSettingsPage() {
 
             {/* Quick action helper links */}
             <div className="pt-2 border-t border-border space-y-1.5">
+              <Link
+                href="/contact"
+                target="_blank"
+                className="flex items-center justify-between rounded-xl p-2 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <LayoutTemplate className="h-3.5 w-3.5" /> Open /contact Page
+                </span>
+                <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+              </Link>
               {form.phone && (
                 <a
                   href={`tel:${form.phone.replace(/[^0-9+]/g, "")}`}

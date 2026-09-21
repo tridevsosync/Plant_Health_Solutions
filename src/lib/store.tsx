@@ -54,6 +54,29 @@ export type Settings = {
   instagram?: string;
   youtube?: string;
   twitter?: string;
+  // Contact page custom fields
+  workingHours?: string;
+  contactHeroBadge?: string;
+  contactHeroTitle?: string;
+  contactHeroSubtitle?: string;
+  contactHeroImage?: string;
+  facilityName?: string;
+  facilityDescription?: string;
+  facilityLocationTitle?: string;
+  facilityImage?: string;
+  googleMapsUrl?: string;
+  enquiryFormTitle?: string;
+  enquiryFormSubtitle?: string;
+  dealerBadge?: string;
+  dealerTitle?: string;
+  dealerDesc?: string;
+  dealerButtonText?: string;
+  dealerWhatsappText?: string;
+  soilTestingBadge?: string;
+  soilTestingTitle?: string;
+  soilTestingDesc?: string;
+  soilTestingButtonText?: string;
+  soilTestingLinkUrl?: string;
 };
 
 export type State = {
@@ -102,6 +125,34 @@ const initialState: State = {
     instagram: "https://instagram.com",
     youtube: "https://youtube.com",
     twitter: "https://twitter.com",
+    // Contact page default settings
+    workingHours: "Mon – Sat: 9:00 AM – 6:30 PM",
+    contactHeroBadge: "Direct Farmer & Dealer Support",
+    contactHeroTitle: "Get in Touch with Our Agronomists",
+    contactHeroSubtitle:
+      "Whether you need crop advice, soil test recommendations, dealership inquiries, or bulk orders, our research and extension team is here to help.",
+    contactHeroImage: "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1920&q=80",
+    facilityName: "Horticulture Research & Extension Center",
+    facilityDescription:
+      "Our 40-acre center on National Highway 52 houses state-of-the-art microbiology testing, blending plants, and demonstration plots.",
+    facilityLocationTitle: "Tidagundi, Vijayapura (NH-52)",
+    facilityImage: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80",
+    googleMapsUrl: "https://maps.google.com/?q=Plant+Health+Solutions+Tidagundi+Vijayapura",
+    enquiryFormTitle: "Send an Enquiry",
+    enquiryFormSubtitle:
+      "Fill out the form below and our agronomy extension team will review your query and get back to you promptly.",
+    dealerBadge: "Distribution Network",
+    dealerTitle: "Become an Authorized Dealer",
+    dealerDesc:
+      "Join our 300+ strong dealer network across Karnataka, Maharashtra, AP, Telangana, and MP. Benefit from high-demand research-backed formulations and marketing support.",
+    dealerButtonText: "Inquire for Dealership →",
+    dealerWhatsappText: "Hello, I am interested in dealership registration with Plant Health Solutions.",
+    soilTestingBadge: "Soil Health",
+    soilTestingTitle: "Free Soil & Water Testing",
+    soilTestingDesc:
+      "Bring or courier your soil and water sample to our Tidagundi lab. Our chief agronomists will analyze pH, organic carbon, and micronutrient status free of cost.",
+    soilTestingButtonText: "Explore Crop Solutions →",
+    soilTestingLinkUrl: "/farmer-solutions",
   },
   cart: [],
   wishlist: [],
@@ -926,7 +977,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const submitTestimonialFeedback = async (t: Partial<Testimonial>) => {
     const id = t.id || `t_${Date.now()}`;
     const date = t.date || new Date().toISOString().split("T")[0];
-    const status = (t.status as "Pending" | "Approved" | "Rejected") || "Approved";
+    const status = (t.status as "Pending" | "Approved" | "Rejected") || "Pending";
 
     const newTestimonial: Testimonial = {
       id,
@@ -959,7 +1010,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           success: true,
           message:
             data.message ||
-            "Thank you! Your feedback has been submitted and is now live on our website!",
+            (status === "Pending"
+              ? "Thank you! Your feedback has been submitted for admin approval."
+              : "Thank you! Your feedback has been submitted and is now live on our website!"),
         };
       }
     } catch (e) {
@@ -972,7 +1025,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
     return {
       success: true,
-      message: "Thank you! Your feedback has been submitted and is now live on our website!",
+      message:
+        status === "Pending"
+          ? "Thank you! Your feedback has been submitted for admin approval."
+          : "Thank you! Your feedback has been submitted and is now live on our website!",
     };
   };
 
@@ -1002,19 +1058,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const saveTestimonial = async (t: Testimonial, isNew: boolean) => {
-    const fallbackItem = { ...t, status: t.status || "Approved" };
     try {
       const url = isNew ? "/api/testimonials" : `/api/testimonials/${encodeURIComponent(t.id)}`;
       const method = isNew ? "POST" : "PUT";
-      const payload = { ...t, status: t.status || (isNew ? "Approved" : t.status) };
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(t),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        const saved = data.testimonial || payload;
+        const saved = data.testimonial || t;
         set((s) => ({
           ...s,
           testimonials: isNew
@@ -1026,6 +1080,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Save testimonial error:", e);
     }
+    const fallbackItem = { ...t };
     set((s) => ({
       ...s,
       testimonials: isNew
@@ -1059,7 +1114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const submitProductReview = async (review: Partial<Review>) => {
     const id = review.id || `r_${Date.now()}`;
     const date = review.date || new Date().toISOString().split("T")[0];
-    const status = (review.status as "Pending" | "Approved" | "Rejected") || "Approved";
+    const status = (review.status as "Pending" | "Approved" | "Rejected") || "Pending";
 
     const newReview: Review = {
       id,
@@ -1075,22 +1130,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const prodApprovedReviews = reviewsList.filter(
         (r) => r.productId === prodId && (r.status === "Approved" || !r.status)
       );
-      if (prodApprovedReviews.length > 0) {
-        const avg =
-          prodApprovedReviews.reduce((sum, r) => sum + (r.rating || 5), 0) / prodApprovedReviews.length;
-        set((s) => ({
-          ...s,
-          products: s.products.map((p) =>
-            p.id === prodId
-              ? {
-                  ...p,
-                  reviews: prodApprovedReviews.length,
-                  rating: Number(avg.toFixed(1)),
-                }
-              : p
-          ),
-        }));
-      }
+      const avg =
+        prodApprovedReviews.length > 0
+          ? prodApprovedReviews.reduce((sum, r) => sum + (r.rating || 5), 0) / prodApprovedReviews.length
+          : 0;
+      set((s) => ({
+        ...s,
+        products: s.products.map((p) =>
+          p.id === prodId
+            ? {
+                ...p,
+                reviews: prodApprovedReviews.length,
+                rating: Number(avg.toFixed(1)),
+              }
+            : p
+        ),
+      }));
     };
 
     try {
@@ -1106,12 +1161,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const nextReviews = [saved, ...s.reviews.filter((x) => x.id !== saved.id)];
           return { ...s, reviews: nextReviews };
         });
-        if (newReview.productId) {
-          updateProductRatingInState([newReview, ...state.reviews], newReview.productId);
+        if (saved.status === "Approved" && saved.productId) {
+          updateProductRatingInState([saved, ...state.reviews], saved.productId);
         }
         return {
           success: true,
-          message: data.message || "Thank you! Your review has been submitted successfully.",
+          message:
+            data.message ||
+            (status === "Pending"
+              ? "Thank you! Your feedback has been submitted for admin approval."
+              : "Thank you! Your crop review has been posted successfully."),
         };
       }
     } catch (e) {
@@ -1122,16 +1181,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const nextReviews = [newReview, ...s.reviews.filter((x) => x.id !== id)];
       return { ...s, reviews: nextReviews };
     });
-    if (newReview.productId) {
+    if (newReview.status === "Approved" && newReview.productId) {
       updateProductRatingInState([newReview, ...state.reviews], newReview.productId);
     }
     return {
       success: true,
-      message: "Thank you! Your review has been submitted successfully.",
+      message:
+        status === "Pending"
+          ? "Thank you! Your feedback has been submitted for admin approval."
+          : "Thank you! Your crop review has been posted successfully.",
     };
   };
 
   const updateReviewStatus = async (id: string, status: "Pending" | "Approved" | "Rejected") => {
+    let targetProdId = "";
     try {
       const res = await fetch(`/api/reviews/${encodeURIComponent(id)}`, {
         method: "PUT",
@@ -1140,29 +1203,92 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        set((s) => ({
-          ...s,
-          reviews: s.reviews.map((r) => (r.id === id ? { ...r, status } : r)),
-        }));
+        set((s) => {
+          const updatedReviews = s.reviews.map((r) => {
+            if (r.id === id) {
+              targetProdId = r.productId;
+              return { ...r, status };
+            }
+            return r;
+          });
+          let updatedProducts = s.products;
+          if (targetProdId) {
+            const prodApproved = updatedReviews.filter(
+              (r) => r.productId === targetProdId && (r.status === "Approved" || !r.status)
+            );
+            const avg =
+              prodApproved.length > 0
+                ? prodApproved.reduce((sum, r) => sum + (r.rating || 5), 0) / prodApproved.length
+                : 0;
+            updatedProducts = s.products.map((p) =>
+              p.id === targetProdId
+                ? { ...p, reviews: prodApproved.length, rating: Number(avg.toFixed(1)) }
+                : p
+            );
+          }
+          return { ...s, reviews: updatedReviews, products: updatedProducts };
+        });
         return true;
       }
     } catch (e) {
       console.error("Update review status error:", e);
     }
-    set((s) => ({
-      ...s,
-      reviews: s.reviews.map((r) => (r.id === id ? { ...r, status } : r)),
-    }));
+    set((s) => {
+      const updatedReviews = s.reviews.map((r) => {
+        if (r.id === id) {
+          targetProdId = r.productId;
+          return { ...r, status };
+        }
+        return r;
+      });
+      let updatedProducts = s.products;
+      if (targetProdId) {
+        const prodApproved = updatedReviews.filter(
+          (r) => r.productId === targetProdId && (r.status === "Approved" || !r.status)
+        );
+        const avg =
+          prodApproved.length > 0
+            ? prodApproved.reduce((sum, r) => sum + (r.rating || 5), 0) / prodApproved.length
+            : 0;
+        updatedProducts = s.products.map((p) =>
+          p.id === targetProdId
+            ? { ...p, reviews: prodApproved.length, rating: Number(avg.toFixed(1)) }
+            : p
+        );
+      }
+      return { ...s, reviews: updatedReviews, products: updatedProducts };
+    });
     return true;
   };
 
   const deleteReview = async (id: string) => {
+    let targetProdId = "";
     try {
       await fetch(`/api/reviews/${encodeURIComponent(id)}`, { method: "DELETE" });
     } catch (e) {
       console.error("Delete review error:", e);
     }
-    set((s) => ({ ...s, reviews: s.reviews.filter((r) => r.id !== id) }));
+    set((s) => {
+      const reviewToDelete = s.reviews.find((r) => r.id === id);
+      targetProdId = reviewToDelete?.productId || "";
+      const updatedReviews = s.reviews.filter((r) => r.id !== id);
+      let updatedProducts = s.products;
+      if (targetProdId) {
+        const prodApproved = updatedReviews.filter(
+          (r) => r.productId === targetProdId && (r.status === "Approved" || !r.status)
+        );
+        const avg =
+          prodApproved.length > 0
+            ? prodApproved.reduce((sum, r) => sum + (r.rating || 5), 0) / prodApproved.length
+            : 0;
+        updatedProducts = s.products.map((p) =>
+          p.id === targetProdId
+            ? { ...p, reviews: prodApproved.length, rating: Number(avg.toFixed(1)) }
+            : p
+        );
+      }
+      return { ...s, reviews: updatedReviews, products: updatedProducts };
+    });
     return true;
   };
 
@@ -1172,7 +1298,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Delete all reviews error:", e);
     }
-    set((s) => ({ ...s, reviews: [] }));
+    set((s) => ({
+      ...s,
+      reviews: [],
+      products: s.products.map((p) => ({ ...p, reviews: 0 })),
+    }));
     return true;
   };
 

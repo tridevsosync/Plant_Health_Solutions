@@ -20,7 +20,9 @@ export async function PUT(
   try {
     await connectDB();
     const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
-    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
+    const query = isObjectId
+      ? { $or: [{ id: clean }, { _id: new mongoose.Types.ObjectId(clean) }, { _id: clean }] }
+      : { $or: [{ id: clean }, { id: new RegExp(`^${clean}$`, "i") }] };
 
     const updated = await ReviewModel.findOneAndUpdate(
       query,
@@ -53,7 +55,13 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json({ success: true, review: updated });
+    return NextResponse.json({
+      success: true,
+      review: {
+        ...updated.toObject(),
+        id: updated.id || String(updated._id),
+      },
+    });
   } catch (error: unknown) {
     console.warn("Review PUT fallback:", (error as Error).message);
     return NextResponse.json({ success: true, review: { id: clean, ...body } });
@@ -70,7 +78,9 @@ export async function DELETE(
   try {
     await connectDB();
     const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
-    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
+    const query = isObjectId
+      ? { $or: [{ id: clean }, { _id: new mongoose.Types.ObjectId(clean) }, { _id: clean }] }
+      : { $or: [{ id: clean }, { id: new RegExp(`^${clean}$`, "i") }] };
 
     const review = await ReviewModel.findOne(query);
     const deleted = await ReviewModel.deleteMany(query);
@@ -80,19 +90,19 @@ export async function DELETE(
         productId: review.productId,
         $or: [{ status: "Approved" }, { status: { $exists: false } }, { status: null }],
       });
-      if (approvedReviews.length > 0) {
-        const avgRating =
-          approvedReviews.reduce((sum, r) => sum + (r.rating || 5), 0) / approvedReviews.length;
-        await ProductModel.updateOne(
-          { id: review.productId },
-          {
-            $set: {
-              reviews: approvedReviews.length,
-              rating: Number(avgRating.toFixed(1)),
-            },
-          }
-        ).catch(() => {});
-      }
+      const avgRating =
+        approvedReviews.length > 0
+          ? approvedReviews.reduce((sum, r) => sum + (r.rating || 5), 0) / approvedReviews.length
+          : 0;
+      await ProductModel.updateOne(
+        { id: review.productId },
+        {
+          $set: {
+            reviews: approvedReviews.length,
+            rating: Number(avgRating.toFixed(1)),
+          },
+        }
+      ).catch(() => {});
     }
 
     return NextResponse.json({

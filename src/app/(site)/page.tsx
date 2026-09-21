@@ -22,10 +22,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { COMPANY } from "@/lib/data";
-import { inr, useApp } from "@/lib/store";
+import { inr, useApp, useUser } from "@/lib/store";
 
 export default function HomePage() {
   const { state, addToCart, toggleWishlist, submitTestimonialFeedback } = useApp();
+  const user = useUser();
   const [selectedCat, setSelectedCat] = React.useState("All");
   const [showFeedbackModal, setShowFeedbackModal] = React.useState(false);
   const [submittingFeedback, setSubmittingFeedback] = React.useState(false);
@@ -38,8 +39,18 @@ export default function HomePage() {
     quote: "",
   });
 
+  React.useEffect(() => {
+    if (user?.name && !feedbackForm.name) {
+      setFeedbackForm((f) => ({ ...f, name: user.name }));
+    }
+  }, [user, feedbackForm.name]);
+
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast.error("Please sign in first to share your farm story.");
+      return;
+    }
     if (!feedbackForm.name.trim() || !feedbackForm.quote.trim()) {
       toast.error("Please enter your name and feedback message.");
       return;
@@ -56,17 +67,17 @@ export default function HomePage() {
       productId: feedbackForm.productId,
       productName: selProd?.name || "",
       quote: feedbackForm.quote.trim(),
-      status: "Approved",
+      status: "Pending",
     });
     setSubmittingFeedback(false);
 
     if (res.success) {
       toast.success(
-        res.message || "Thank you! Your feedback has been submitted and is now live on our website!"
+        res.message || "Thank you! Your feedback has been submitted for admin approval."
       );
       setShowFeedbackModal(false);
       setFeedbackForm({
-        name: "",
+        name: user?.name || "",
         place: "Vijayapura, Karnataka",
         crop: "Sugarcane",
         rating: 5,
@@ -644,125 +655,155 @@ export default function HomePage() {
               </button>
             </div>
 
-            <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                  Farmer / Customer Name *
-                </label>
-                <input
-                  required
-                  value={feedbackForm.name}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
-                  placeholder="e.g. Ramesh Patil"
-                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
-                />
+            {!user ? (
+              <div className="py-6 text-center space-y-4">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <ShieldCheck className="h-7 w-7" />
+                </div>
+                <h4 className="font-display text-lg font-bold text-foreground">
+                  Sign In to Share Your Story
+                </h4>
+                <p className="mx-auto max-w-sm text-xs sm:text-sm text-muted-foreground">
+                  Only registered and logged-in farmers can submit field results and product feedback.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <Link
+                    href="/login?redirect=/"
+                    onClick={() => setShowFeedbackModal(false)}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground shadow hover:opacity-95 transition-all"
+                  >
+                    Sign In to Submit Feedback &rarr;
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setShowFeedbackModal(false)}
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-all"
+                  >
+                    Register New Account
+                  </Link>
+                </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            ) : (
+              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                    Village / District *
+                    Farmer / Customer Name *
                   </label>
                   <input
                     required
-                    value={feedbackForm.place}
-                    onChange={(e) => setFeedbackForm({ ...feedbackForm, place: e.target.value })}
-                    placeholder="Vijayapura, Karnataka"
+                    value={feedbackForm.name}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
+                    placeholder="e.g. Ramesh Patil"
                     className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                      Village / District *
+                    </label>
+                    <input
+                      required
+                      value={feedbackForm.place}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, place: e.target.value })}
+                      placeholder="Vijayapura, Karnataka"
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                      Crop Grown *
+                    </label>
+                    <input
+                      required
+                      value={feedbackForm.crop}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, crop: e.target.value })}
+                      placeholder="Sugarcane / Cotton / Grapes"
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                      Rating (1 to 5 Stars) *
+                    </label>
+                    <select
+                      value={feedbackForm.rating}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, rating: Number(e.target.value) })}
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                    >
+                      <option value={5}>5 Stars - Excellent Result</option>
+                      <option value={4}>4 Stars - Very Good</option>
+                      <option value={3}>3 Stars - Good</option>
+                      <option value={2}>2 Stars - Average</option>
+                      <option value={1}>1 Star - Poor</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                      Product Used (Optional)
+                    </label>
+                    <select
+                      value={feedbackForm.productId}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, productId: e.target.value })}
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                    >
+                      <option value="">General Farm Solution</option>
+                      {state.products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                    Crop Grown *
+                    Your Crop Result &amp; Experience *
                   </label>
-                  <input
+                  <textarea
                     required
-                    value={feedbackForm.crop}
-                    onChange={(e) => setFeedbackForm({ ...feedbackForm, crop: e.target.value })}
-                    placeholder="Sugarcane / Cotton / Grapes"
+                    rows={4}
+                    value={feedbackForm.quote}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, quote: e.target.value })}
+                    placeholder="Share details on application schedule, crop vigor, pest/disease recovery, or yield improvement..."
                     className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                    Rating (1 to 5 Stars) *
-                  </label>
-                  <select
-                    value={feedbackForm.rating}
-                    onChange={(e) => setFeedbackForm({ ...feedbackForm, rating: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
-                  >
-                    <option value={5}>5 Stars - Excellent Result</option>
-                    <option value={4}>4 Stars - Very Good</option>
-                    <option value={3}>3 Stars - Good</option>
-                    <option value={2}>2 Stars - Average</option>
-                    <option value={1}>1 Star - Poor</option>
-                  </select>
+                <div className="rounded-xl bg-amber-500/10 p-3 text-xs text-amber-800 border border-amber-500/20">
+                  <span className="font-bold">Moderation Notice:</span> Your feedback will be reviewed by our agronomy admin team before appearing publicly on the website.
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                    Product Used (Optional)
-                  </label>
-                  <select
-                    value={feedbackForm.productId}
-                    onChange={(e) => setFeedbackForm({ ...feedbackForm, productId: e.target.value })}
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                  <button
+                    type="button"
+                    onClick={() => setShowFeedbackModal(false)}
+                    className="rounded-full border border-border px-5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
                   >
-                    <option value="">General Farm Solution</option>
-                    {state.products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingFeedback}
+                    className="rounded-full bg-primary px-7 py-2 text-xs font-bold text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
+                  >
+                    {submittingFeedback ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Submitting for Review...
+                      </>
+                    ) : (
+                      "Submit Feedback (Pending Approval)"
+                    )}
+                  </button>
                 </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                  Your Crop Result &amp; Experience *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={feedbackForm.quote}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, quote: e.target.value })}
-                  placeholder="Share details on application schedule, crop vigor, pest/disease recovery, or yield improvement..."
-                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
-                />
-              </div>
-
-              <div className="rounded-xl bg-emerald-500/10 p-3 text-xs text-emerald-700 border border-emerald-500/20">
-                <span className="font-bold">Community Note:</span> Your review will be published immediately to help fellow farmers, and is verified by our agronomy team.
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setShowFeedbackModal(false)}
-                  className="rounded-full border border-border px-5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingFeedback}
-                  className="rounded-full bg-primary px-7 py-2 text-xs font-bold text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
-                >
-                  {submittingFeedback ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Submitting...
-                    </>
-                  ) : (
-                    "Submit Feedback"
-                  )}
-                </button>
-              </div>
-            </form>
+              </form>
+            )}
           </div>
         </div>
       )}

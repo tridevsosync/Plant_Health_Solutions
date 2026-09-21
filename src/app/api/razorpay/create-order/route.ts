@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_T7ub9uRXOT69Du";
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || "r071X4HV5n7so70Qmstrg54v";
 
     // In paise (e.g. ₹450 = 45000 paise)
     const amountInPaise = Math.round(Number(amount) * 100);
@@ -37,9 +37,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           success: true,
           orderId: order.id,
+          order: order,
           amount: order.amount,
           currency: order.currency,
-          keyId,
+          keyId: keyId,
+          key_id: keyId,
+          simulated: false,
         });
       } catch (rzpErr) {
         console.warn("Razorpay SDK order creation failed, using sandbox fallback:", (rzpErr as Error).message);
@@ -51,9 +54,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       orderId: simulatedOrderId,
+      order: {
+        id: simulatedOrderId,
+        amount: amountInPaise,
+        currency: "INR",
+      },
       amount: amountInPaise,
       currency: "INR",
-      keyId: keyId || "rzp_test_PHS2026",
+      keyId: keyId,
+      key_id: keyId,
       simulated: true,
     });
   } catch (err: unknown) {

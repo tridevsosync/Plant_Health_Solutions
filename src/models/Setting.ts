@@ -18,6 +18,29 @@ export interface ISetting extends Document {
   instagram?: string;
   youtube?: string;
   twitter?: string;
+  // Contact Page Customization Fields
+  workingHours?: string;
+  contactHeroBadge?: string;
+  contactHeroTitle?: string;
+  contactHeroSubtitle?: string;
+  contactHeroImage?: string;
+  facilityName?: string;
+  facilityDescription?: string;
+  facilityLocationTitle?: string;
+  facilityImage?: string;
+  googleMapsUrl?: string;
+  enquiryFormTitle?: string;
+  enquiryFormSubtitle?: string;
+  dealerBadge?: string;
+  dealerTitle?: string;
+  dealerDesc?: string;
+  dealerButtonText?: string;
+  dealerWhatsappText?: string;
+  soilTestingBadge?: string;
+  soilTestingTitle?: string;
+  soilTestingDesc?: string;
+  soilTestingButtonText?: string;
+  soilTestingLinkUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +72,61 @@ const SettingSchema = new Schema<ISetting>(
     instagram: { type: String, default: "https://instagram.com" },
     youtube: { type: String, default: "https://youtube.com" },
     twitter: { type: String, default: "https://twitter.com" },
+    // Contact Page Customization Defaults
+    workingHours: { type: String, default: "Mon – Sat: 9:00 AM – 6:30 PM" },
+    contactHeroBadge: { type: String, default: "Direct Farmer & Dealer Support" },
+    contactHeroTitle: { type: String, default: "Get in Touch with Our Agronomists" },
+    contactHeroSubtitle: {
+      type: String,
+      default:
+        "Whether you need crop advice, soil test recommendations, dealership inquiries, or bulk orders, our research and extension team is here to help.",
+    },
+    contactHeroImage: {
+      type: String,
+      default: "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1920&q=80",
+    },
+    facilityName: { type: String, default: "Horticulture Research & Extension Center" },
+    facilityDescription: {
+      type: String,
+      default:
+        "Our 40-acre center on National Highway 52 houses state-of-the-art microbiology testing, blending plants, and demonstration plots.",
+    },
+    facilityLocationTitle: { type: String, default: "Tidagundi, Vijayapura (NH-52)" },
+    facilityImage: {
+      type: String,
+      default: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80",
+    },
+    googleMapsUrl: {
+      type: String,
+      default: "https://maps.google.com/?q=Plant+Health+Solutions+Tidagundi+Vijayapura",
+    },
+    enquiryFormTitle: { type: String, default: "Send an Enquiry" },
+    enquiryFormSubtitle: {
+      type: String,
+      default:
+        "Fill out the form below and our agronomy extension team will review your query and get back to you promptly.",
+    },
+    dealerBadge: { type: String, default: "Distribution Network" },
+    dealerTitle: { type: String, default: "Become an Authorized Dealer" },
+    dealerDesc: {
+      type: String,
+      default:
+        "Join our 300+ strong dealer network across Karnataka, Maharashtra, AP, Telangana, and MP. Benefit from high-demand research-backed formulations and marketing support.",
+    },
+    dealerButtonText: { type: String, default: "Inquire for Dealership →" },
+    dealerWhatsappText: {
+      type: String,
+      default: "Hello, I am interested in dealership registration with Plant Health Solutions.",
+    },
+    soilTestingBadge: { type: String, default: "Soil Health" },
+    soilTestingTitle: { type: String, default: "Free Soil & Water Testing" },
+    soilTestingDesc: {
+      type: String,
+      default:
+        "Bring or courier your soil and water sample to our Tidagundi lab. Our chief agronomists will analyze pH, organic carbon, and micronutrient status free of cost.",
+    },
+    soilTestingButtonText: { type: String, default: "Explore Crop Solutions →" },
+    soilTestingLinkUrl: { type: String, default: "/farmer-solutions" },
   },
   { timestamps: true }
 );

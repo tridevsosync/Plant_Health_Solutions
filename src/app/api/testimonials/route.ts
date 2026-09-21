@@ -14,12 +14,6 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    // Auto-seed collection if empty
-    const count = await TestimonialModel.countDocuments();
-    if (count === 0 && seedTestimonials.length > 0) {
-      await TestimonialModel.insertMany(seedTestimonials).catch(() => {});
-    }
-
     const query: Record<string, unknown> = {};
     if (status) {
       query.status = status;
@@ -28,7 +22,13 @@ export async function GET(req: NextRequest) {
       query.$or = [{ status: "Approved" }, { status: { $exists: false } }, { status: null }];
     }
 
-    const testimonials = await TestimonialModel.find(query).sort({ createdAt: -1 }).lean();
+    const rawTestimonials = await TestimonialModel.find(query).sort({ createdAt: -1 }).lean();
+    const testimonials = rawTestimonials.map((t) => ({
+      ...t,
+      id: t.id ? String(t.id) : String(t._id),
+      _id: String(t._id || t.id),
+    }));
+
     return NextResponse.json({ success: true, testimonials });
   } catch (error: unknown) {
     console.warn("Testimonials GET fallback:", (error as Error).message);
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
   const id = body.id || `t_${Date.now()}`;
   const date = body.date || new Date().toISOString().split("T")[0];
-  const status = (body.status as "Pending" | "Approved" | "Rejected") || "Approved";
+  const status = (body.status as "Pending" | "Approved" | "Rejected") || "Pending";
 
   const newTestimonial: Testimonial = {
     id,
@@ -82,7 +82,12 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const created = await TestimonialModel.create(newTestimonial);
     const resultObj = created.toObject ? created.toObject() : newTestimonial;
-    memoryTestimonials = [resultObj, ...memoryTestimonials.filter((t) => t.id !== id)];
+    const finalObj: Testimonial = {
+      ...newTestimonial,
+      ...resultObj,
+      id: resultObj.id || id,
+    };
+    memoryTestimonials = [finalObj, ...memoryTestimonials.filter((t) => t.id !== id)];
 
     return NextResponse.json({
       success: true,
@@ -90,7 +95,7 @@ export async function POST(req: NextRequest) {
         status === "Pending"
           ? "Thank you! Your feedback has been submitted for review. It will appear once approved by our team."
           : "Thank you! Your feedback has been submitted and is now live on our website!",
-      testimonial: resultObj,
+      testimonial: finalObj,
     });
   } catch (error: unknown) {
     console.warn("Testimonials POST fallback:", (error as Error).message);

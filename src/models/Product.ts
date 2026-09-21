@@ -11,6 +11,8 @@ export interface IProduct extends Document {
   stock: number;
   unit: string;
   image: string;
+  image2?: string;
+  images?: string[];
   description: string;
   benefits: string[];
   usage: string;
@@ -32,6 +34,8 @@ const ProductSchema = new Schema<IProduct>(
     stock: { type: Number, default: 100 },
     unit: { type: String, default: "1 L" },
     image: { type: String, default: "" },
+    image2: { type: String, default: "" },
+    images: { type: [String], default: [] },
     description: { type: String, default: "" },
     benefits: { type: [String], default: [] },
     usage: { type: String, default: "" },

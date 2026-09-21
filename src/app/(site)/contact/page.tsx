@@ -55,25 +55,31 @@ export default function ContactPage() {
     }
   };
 
+  const s = state.settings;
+
   return (
     <div>
       {/* Hero Banner */}
       <section className="relative isolate overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1920&q=80"
-          alt="Contact Plant Health Solutions"
+          src={
+            s.contactHeroImage ||
+            "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1920&q=80"
+          }
+          alt={s.contactHeroTitle || "Contact Plant Health Solutions"}
           className="absolute inset-0 -z-10 h-full w-full object-cover"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#122b17]/95 via-[#183a1f]/90 to-[#285724]/80 backdrop-blur-[0.5px]" />
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20 lg:px-8">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
-            <Sparkles className="h-3.5 w-3.5" /> Direct Farmer &amp; Dealer Support
+            <Sparkles className="h-3.5 w-3.5" /> {s.contactHeroBadge || "Direct Farmer & Dealer Support"}
           </span>
           <h1 className="mt-4 max-w-3xl font-display text-4xl font-bold md:text-5xl leading-tight text-white">
-            Get in Touch with Our Agronomists
+            {s.contactHeroTitle || "Get in Touch with Our Agronomists"}
           </h1>
-          <p className="mt-3 max-w-2xl text-base text-white/85 md:text-lg">
-            Whether you need crop advice, soil test recommendations, dealership inquiries, or bulk orders, our research and extension team is here to help.
+          <p className="mt-3 max-w-2xl text-base text-white/85 md:text-lg leading-relaxed">
+            {s.contactHeroSubtitle ||
+              "Whether you need crop advice, soil test recommendations, dealership inquiries, or bulk orders, our research and extension team is here to help."}
           </p>
         </div>
       </section>
@@ -87,12 +93,12 @@ export default function ContactPage() {
               <Phone className="h-5 w-5" />
             </div>
             <h3 className="mt-4 font-display text-base font-bold text-primary">Call Helpline</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Mon – Sat, 9:00 AM – 6:30 PM</p>
+            <p className="mt-1 text-xs text-muted-foreground">{s.workingHours || "Mon – Sat, 9:00 AM – 6:30 PM"}</p>
             <a
-              href={`tel:${(state.settings.phone || COMPANY.phone).replace(/[^0-9+]/g, "")}`}
+              href={`tel:${(s.phone || COMPANY.phone).replace(/[^0-9+]/g, "")}`}
               className="mt-3 block text-sm font-semibold text-secondary hover:text-primary transition-colors"
             >
-              {state.settings.phone || COMPANY.phone}
+              {s.phone || COMPANY.phone}
             </a>
           </div>
 
@@ -104,7 +110,7 @@ export default function ContactPage() {
             <h3 className="mt-4 font-display text-base font-bold text-primary">WhatsApp Advisory</h3>
             <p className="mt-1 text-xs text-muted-foreground">Quick crop solutions &amp; photos</p>
             <a
-              href={`https://wa.me/${(state.settings.whatsapp || state.settings.phone || COMPANY.phone).replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello PHS, I would like to get advice on crop solutions.")}`}
+              href={`https://wa.me/${(s.whatsapp || s.phone || COMPANY.whatsapp || COMPANY.phone).replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hello PHS, I would like to get advice on crop solutions.")}`}
               target="_blank"
               rel="noreferrer"
               className="mt-3 block text-sm font-semibold text-[#128C7E] hover:underline"
@@ -121,10 +127,10 @@ export default function ContactPage() {
             <h3 className="mt-4 font-display text-base font-bold text-primary">Email Support</h3>
             <p className="mt-1 text-xs text-muted-foreground">Response within 24 business hours</p>
             <a
-              href={`mailto:${state.settings.email1 || "planthealthsol@gmail.com"}`}
+              href={`mailto:${s.email1 || COMPANY.email1 || "planthealthsol@gmail.com"}`}
               className="mt-3 block text-sm font-semibold text-secondary hover:text-primary transition-colors truncate"
             >
-              {state.settings.email1 || "planthealthsol@gmail.com"}
+              {s.email1 || COMPANY.email1 || "planthealthsol@gmail.com"}
             </a>
           </div>
 
@@ -134,9 +140,11 @@ export default function ContactPage() {
               <MapPin className="h-5 w-5" />
             </div>
             <h3 className="mt-4 font-display text-base font-bold text-primary">Research Center</h3>
-            <p className="mt-1 text-xs text-muted-foreground">NH-52, Tidagundi, Vijayapura</p>
-            <span className="mt-3 block text-xs font-semibold text-muted-foreground">
-              Karnataka 586119
+            <p className="mt-1 text-xs text-muted-foreground line-clamp-1">
+              {s.facilityLocationTitle || "NH-52, Tidagundi, Vijayapura"}
+            </p>
+            <span className="mt-3 block text-xs font-semibold text-muted-foreground line-clamp-1">
+              {s.address ? s.address.split(",").slice(-2).join(",").trim() : "Karnataka 586119"}
             </span>
           </div>
         </div>
@@ -151,10 +159,13 @@ export default function ContactPage() {
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/15 text-secondary">
                 <Send className="h-4 w-4" />
               </span>
-              <h2 className="font-display text-2xl font-bold text-primary">Send an Enquiry</h2>
+              <h2 className="font-display text-2xl font-bold text-primary">
+                {s.enquiryFormTitle || "Send an Enquiry"}
+              </h2>
             </div>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              Fill out the form below and our agronomy extension team will review your query and get back to you promptly.
+              {s.enquiryFormSubtitle ||
+                "Fill out the form below and our agronomy extension team will review your query and get back to you promptly."}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -260,17 +271,19 @@ export default function ContactPage() {
             {/* Center Info Card */}
             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-7">
               <h3 className="font-display text-xl font-bold text-primary">
-                Horticulture Research &amp; Extension Center
+                {s.facilityName || "Horticulture Research & Extension Center"}
               </h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Our 40-acre center on National Highway 52 houses state-of-the-art microbiology testing, blending plants, and demonstration plots.
+                {s.facilityDescription ||
+                  "Our 40-acre center on National Highway 52 houses state-of-the-art microbiology testing, blending plants, and demonstration plots."}
               </p>
 
               <div className="mt-5 space-y-3.5 border-t border-border/60 pt-4 text-sm">
                 <div className="flex items-start gap-3">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
                   <span className="text-muted-foreground leading-relaxed">
-                    {state.settings.address ||
+                    {s.address ||
+                      COMPANY.address ||
                       "NH-52, Vijayapur - Solapur Road, Tidagundi, Vijayapura, Karnataka 586119"}
                   </span>
                 </div>
@@ -278,32 +291,37 @@ export default function ContactPage() {
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 shrink-0 text-secondary" />
                   <a
-                    href={`tel:${(state.settings.phone || COMPANY.phone).replace(/[^0-9+]/g, "")}`}
+                    href={`tel:${(s.phone || COMPANY.phone).replace(/[^0-9+]/g, "")}`}
                     className="font-medium text-foreground hover:text-secondary transition-colors"
                   >
-                    {state.settings.phone || COMPANY.phone}
+                    {s.phone || COMPANY.phone}
                   </a>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <Mail className="h-4 w-4 shrink-0 text-secondary" />
                   <a
-                    href="mailto:hello@planthealthsolutions.com"
-                    className="font-medium text-foreground hover:text-secondary transition-colors"
+                    href={`mailto:${s.email1 || COMPANY.email1 || "hello@planthealthsolutions.com"}`}
+                    className="font-medium text-foreground hover:text-secondary transition-colors truncate"
                   >
-                    hello@planthealthsolutions.com
+                    {s.email1 || COMPANY.email1 || "hello@planthealthsolutions.com"}
                   </a>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <Clock className="h-4 w-4 shrink-0 text-secondary" />
-                  <span className="text-muted-foreground">Mon – Sat: 9:00 AM – 6:30 PM</span>
+                  <span className="text-muted-foreground">
+                    {s.workingHours || "Mon – Sat: 9:00 AM – 6:30 PM"}
+                  </span>
                 </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-border/60">
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent("Plant Health Solutions Tidagundi Vijayapura")}`}
+                  href={
+                    s.googleMapsUrl ||
+                    `https://maps.google.com/?q=${encodeURIComponent(s.address || "Plant Health Solutions Tidagundi Vijayapura")}`
+                  }
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2.5 text-sm font-semibold text-primary transition hover:bg-muted"
@@ -317,8 +335,11 @@ export default function ContactPage() {
             <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
               <div className="relative h-48 w-full bg-muted">
                 <img
-                  src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80"
-                  alt="PHS Tidagundi Research Center"
+                  src={
+                    s.facilityImage ||
+                    "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80"
+                  }
+                  alt={s.facilityLocationTitle || "PHS Tidagundi Research Center"}
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end p-5">
@@ -326,7 +347,9 @@ export default function ContactPage() {
                     <p className="text-xs font-semibold uppercase tracking-wider text-[#a8d672]">
                       Facility Location
                     </p>
-                    <p className="font-display text-lg font-bold">Tidagundi, Vijayapura (NH-52)</p>
+                    <p className="font-display text-lg font-bold">
+                      {s.facilityLocationTitle || "Tidagundi, Vijayapura (NH-52)"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -342,23 +365,26 @@ export default function ContactPage() {
           <div className="rounded-3xl border border-border bg-card p-8 shadow-sm flex flex-col justify-between">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/30 text-primary px-3 py-1 text-xs font-semibold uppercase tracking-wider">
-                <Building2 className="h-3.5 w-3.5" /> Distribution Network
+                <Building2 className="h-3.5 w-3.5" /> {s.dealerBadge || "Distribution Network"}
               </span>
               <h3 className="mt-4 font-display text-2xl font-bold text-primary">
-                Become an Authorized Dealer
+                {s.dealerTitle || "Become an Authorized Dealer"}
               </h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Join our 300+ strong dealer network across Karnataka, Maharashtra, AP, Telangana, and MP. Benefit from high-demand research-backed formulations and marketing support.
+                {s.dealerDesc ||
+                  "Join our 300+ strong dealer network across Karnataka, Maharashtra, AP, Telangana, and MP. Benefit from high-demand research-backed formulations and marketing support."}
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border/60">
               <a
-                href={`https://wa.me/${COMPANY.whatsapp}?text=${encodeURIComponent("Hello, I am interested in dealership registration with Plant Health Solutions.")}`}
+                href={`https://wa.me/${(s.whatsapp || s.phone || COMPANY.whatsapp).replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                  s.dealerWhatsappText || "Hello, I am interested in dealership registration with Plant Health Solutions."
+                )}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-secondary hover:text-primary transition-colors"
               >
-                Inquire for Dealership &rarr;
+                {s.dealerButtonText || "Inquire for Dealership →"}
               </a>
             </div>
           </div>
@@ -367,21 +393,22 @@ export default function ContactPage() {
           <div className="rounded-3xl border border-border bg-card p-8 shadow-sm flex flex-col justify-between">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/30 text-primary px-3 py-1 text-xs font-semibold uppercase tracking-wider">
-                <FlaskConical className="h-3.5 w-3.5" /> Soil Health
+                <FlaskConical className="h-3.5 w-3.5" /> {s.soilTestingBadge || "Soil Health"}
               </span>
               <h3 className="mt-4 font-display text-2xl font-bold text-primary">
-                Free Soil &amp; Water Testing
+                {s.soilTestingTitle || "Free Soil & Water Testing"}
               </h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Bring or courier your soil and water sample to our Tidagundi lab. Our chief agronomists will analyze pH, organic carbon, and micronutrient status free of cost.
+                {s.soilTestingDesc ||
+                  "Bring or courier your soil and water sample to our Tidagundi lab. Our chief agronomists will analyze pH, organic carbon, and micronutrient status free of cost."}
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border/60">
               <Link
-                href="/farmer-solutions"
+                href={s.soilTestingLinkUrl || "/farmer-solutions"}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-secondary hover:text-primary transition-colors"
               >
-                Explore Crop Solutions &rarr;
+                {s.soilTestingButtonText || "Explore Crop Solutions →"}
               </Link>
             </div>
           </div>

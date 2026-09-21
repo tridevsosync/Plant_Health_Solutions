@@ -24,7 +24,13 @@ export async function GET(req: NextRequest) {
       query.$or = [{ status: "Approved" }, { status: { $exists: false } }, { status: null }];
     }
 
-    const reviews = await ReviewModel.find(query).sort({ createdAt: -1 }).lean();
+    const rawReviews = await ReviewModel.find(query).sort({ createdAt: -1 }).lean();
+    const reviews = rawReviews.map((r) => ({
+      ...r,
+      id: r.id ? String(r.id) : String(r._id),
+      _id: String(r._id || r.id),
+    }));
+
     return NextResponse.json({ success: true, reviews });
   } catch (error: unknown) {
     console.warn("Reviews GET fallback:", (error as Error).message);
@@ -58,7 +64,7 @@ export async function POST(req: NextRequest) {
 
   const id = body.id || `r_${Date.now()}`;
   const date = body.date || new Date().toISOString().split("T")[0];
-  const status = (body.status as "Pending" | "Approved" | "Rejected") || "Approved";
+  const status = (body.status as "Pending" | "Approved" | "Rejected") || "Pending";
 
   const newReview: Review = {
     id,
@@ -75,7 +81,12 @@ export async function POST(req: NextRequest) {
 
     const review = await ReviewModel.create(newReview);
     const resultObj = review.toObject ? review.toObject() : newReview;
-    memoryReviews = [resultObj, ...memoryReviews.filter((r) => r.id !== id)];
+    const finalObj: Review = {
+      ...newReview,
+      ...resultObj,
+      id: resultObj.id || id,
+    };
+    memoryReviews = [finalObj, ...memoryReviews.filter((r) => r.id !== id)];
 
     // If approved immediately, recalculate product rating
     if (status === "Approved") {
@@ -104,7 +115,7 @@ export async function POST(req: NextRequest) {
         status === "Pending"
           ? "Thank you! Your feedback has been submitted for review."
           : "Thank you! Your crop review has been posted successfully.",
-      review: resultObj,
+      review: finalObj,
     });
   } catch (error: unknown) {
     console.warn("Reviews POST fallback:", (error as Error).message);

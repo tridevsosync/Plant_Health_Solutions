@@ -19,6 +19,19 @@ export default function ProductDetailPage() {
   const [tab, setTab] = React.useState("description");
   const [submittingReview, setSubmittingReview] = React.useState(false);
   const [form, setForm] = React.useState({ name: "", rating: 5, comment: "" });
+  const [activeImage, setActiveImage] = React.useState(product?.image || "");
+
+  React.useEffect(() => {
+    if (product?.image) {
+      setActiveImage(product.image);
+    }
+  }, [product?.id, product?.image]);
+
+  React.useEffect(() => {
+    if (user?.name && !form.name) {
+      setForm((f) => ({ ...f, name: user.name }));
+    }
+  }, [user, form.name]);
 
   if (!product) {
     return (
@@ -46,8 +59,18 @@ export default function ProductDetailPage() {
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : 0;
 
+  const galleryImages: string[] = [product.image, product.image2, ...(product.images || [])]
+    .filter((img): img is string => Boolean(img) && typeof img === "string")
+    .filter((img, idx, arr) => arr.indexOf(img) === idx)
+    .slice(0, 2);
+
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast.error("Please sign in first to submit your crop review.");
+      router.push(`/login?redirect=/products/${encodeURIComponent(product.id)}`);
+      return;
+    }
     if (!form.name.trim() || !form.comment.trim()) {
       toast.error("Please enter your name and feedback.");
       return;
@@ -60,13 +83,13 @@ export default function ProductDetailPage() {
         name: form.name.trim(),
         rating: Number(form.rating),
         comment: form.comment.trim(),
-        status: "Approved",
+        status: "Pending",
       });
 
       if (res.success) {
-        setForm({ name: "", rating: 5, comment: "" });
+        setForm({ name: user?.name || "", rating: 5, comment: "" });
         toast.success(
-          res.message || "Thank you! Your product review has been posted successfully."
+          res.message || "Thank you! Your feedback has been submitted for admin approval."
         );
       } else {
         toast.error(res.error || "Failed to post review");
@@ -100,15 +123,20 @@ export default function ProductDetailPage() {
       <div className="grid gap-10 lg:grid-cols-2">
         {/* Left: Image gallery */}
         <div>
-          <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+          <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm group">
             <img
-              src={product.image}
+              src={activeImage || product.image}
               alt={product.name}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
             {off > 0 && (
               <span className="absolute left-4 top-4 rounded-full bg-destructive px-3 py-1 text-xs font-bold text-white shadow-md">
                 {off}% OFF
+              </span>
+            )}
+            {galleryImages.length > 1 && (
+              <span className="absolute left-4 bottom-4 rounded-full bg-black/60 backdrop-blur-xs px-2.5 py-1 text-[11px] font-semibold text-white">
+                View {Math.max(1, galleryImages.indexOf(activeImage || product.image) + 1)} of {galleryImages.length}
               </span>
             )}
             <button
@@ -122,20 +150,35 @@ export default function ProductDetailPage() {
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-4 gap-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="relative aspect-square overflow-hidden rounded-xl border border-border bg-muted/40 cursor-pointer hover:border-primary transition-all"
-              >
-                <img
-                  src={product.image}
-                  alt={`${product.name} angle ${i + 1}`}
-                  className="h-full w-full object-cover opacity-90 hover:opacity-100 transition-opacity"
-                />
-              </div>
-            ))}
-          </div>
+          {/* Interactive Thumbnails (Only shown if 2 images exist) */}
+          {galleryImages.length > 1 && (
+            <div className="mt-3.5 grid grid-cols-2 gap-3.5 max-w-xs">
+              {galleryImages.map((img, i) => {
+                const isSelected = (activeImage || product.image) === img;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveImage(img)}
+                    className={`relative aspect-square overflow-hidden rounded-2xl border-2 transition-all duration-200 cursor-pointer text-left bg-card shadow-2xs ${
+                      isSelected
+                        ? "border-primary ring-2 ring-primary/30 scale-[1.02]"
+                        : "border-border/80 opacity-70 hover:opacity-100 hover:border-primary/50"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} View ${i + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    <span className="absolute bottom-1.5 left-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-2xs">
+                      {i === 0 ? "Main View" : "Angle 2"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Right: Product information */}
@@ -240,11 +283,19 @@ export default function ProductDetailPage() {
           <div className="mt-8 grid gap-3 sm:grid-cols-2 border-t border-border pt-6">
             <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
               <Truck className="h-5 w-5 text-secondary shrink-0" />
-              <span>Free doorstep delivery on orders above ₹2,000</span>
+              <span>
+                Free doorstep delivery on orders above {inr(state.settings.freeShippingThreshold ?? 2000)}
+              </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
               <ShieldCheck className="h-5 w-5 text-secondary shrink-0" />
-              <span>Tested &amp; certified at Tidagundi Quality Control Lab</span>
+              <span>
+                Tested &amp; certified at{" "}
+                {state.settings.facilityLocationTitle
+                  ? state.settings.facilityLocationTitle.split(",")[0].trim()
+                  : "Tidagundi"}{" "}
+                Quality Control Lab
+              </span>
             </div>
           </div>
         </div>
@@ -328,7 +379,12 @@ export default function ProductDetailPage() {
             <div className="space-y-8">
               <div className="space-y-4">
                 {reviews.length === 0 ? (
-                  <p className="text-muted-foreground py-4">No reviews yet. Be the first farmer to share your experience!</p>
+                  <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
+                    <p className="font-medium text-foreground">No approved reviews yet.</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Be the first registered farmer to share field results with this product!
+                    </p>
+                  </div>
                 ) : (
                   reviews.map((r) => (
                     <div key={r.id} className="rounded-2xl border border-border bg-background p-5 shadow-xs">
@@ -343,65 +399,98 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Submit review form */}
-              <div className="rounded-2xl border border-border bg-muted/30 p-6">
-                <h4 className="font-display text-base font-bold text-foreground mb-4">Share Your Crop Result</h4>
-                <form onSubmit={handleReviewSubmit} className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Your Name</label>
-                    <input
-                      required
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      placeholder="e.g. Ramesh Patil"
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                    />
+              {/* Conditional: Sign-in CTA for guests vs Review Form for logged in users */}
+              {!user ? (
+                <div className="rounded-3xl border border-border bg-gradient-to-br from-primary/5 via-card to-secondary/5 p-6 sm:p-8 text-center shadow-xs">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
+                    <ShieldCheck className="h-6 w-6" />
                   </div>
-
-                  <div>
-                    <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Rating</label>
-                    <select
-                      value={form.rating}
-                      onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })}
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                  <h4 className="font-display text-lg font-bold text-foreground">
+                    Sign In to Share Your Crop Review
+                  </h4>
+                  <p className="mx-auto mt-1 max-w-md text-xs sm:text-sm text-muted-foreground">
+                    Only verified registered farmers can submit crop ratings and feedback. All submitted reviews are moderated by our admin team before being published live.
+                  </p>
+                  <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                    <Link
+                      href={`/login?redirect=/products/${encodeURIComponent(product.id)}`}
+                      className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground shadow hover:opacity-95 transition-all"
                     >
-                      <option value={5}>5 Stars - Excellent Result</option>
-                      <option value={4}>4 Stars - Very Good</option>
-                      <option value={3}>3 Stars - Good</option>
-                      <option value={2}>2 Stars - Average</option>
-                      <option value={1}>1 Star - Poor</option>
-                    </select>
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Your Review / Field Observations</label>
-                    <textarea
-                      required
-                      rows={3}
-                      value={form.comment}
-                      onChange={(e) => setForm({ ...form, comment: e.target.value })}
-                      placeholder="Describe which crop you applied this on, application timing, and observed yield / vigor improvement..."
-                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <button
-                      type="submit"
-                      disabled={submittingReview}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-2.5 text-xs font-bold text-primary-foreground shadow hover:opacity-90 disabled:opacity-50 transition-all"
+                      Sign In to Write a Review &rarr;
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-all"
                     >
-                      {submittingReview ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Submitting...
-                        </>
-                      ) : (
-                        "Submit Review"
-                      )}
-                    </button>
+                      Create New Account
+                    </Link>
                   </div>
-                </form>
-              </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border bg-muted/30 p-6">
+                  <div className="mb-4">
+                    <h4 className="font-display text-base font-bold text-foreground">Share Your Crop Result</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Signed in as <span className="font-semibold text-foreground">{user.name || user.email}</span> · Your feedback will be reviewed by admin before appearing live.
+                    </p>
+                  </div>
+                  <form onSubmit={handleReviewSubmit} className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Your Name</label>
+                      <input
+                        required
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        placeholder="e.g. Ramesh Patil"
+                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Rating</label>
+                      <select
+                        value={form.rating}
+                        onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })}
+                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      >
+                        <option value={5}>5 Stars - Excellent Result</option>
+                        <option value={4}>4 Stars - Very Good</option>
+                        <option value={3}>3 Stars - Good</option>
+                        <option value={2}>2 Stars - Average</option>
+                        <option value={1}>1 Star - Poor</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Your Review / Field Observations</label>
+                      <textarea
+                        required
+                        rows={3}
+                        value={form.comment}
+                        onChange={(e) => setForm({ ...form, comment: e.target.value })}
+                        placeholder="Describe which crop you applied this on, application timing, and observed yield / vigor improvement..."
+                        className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <button
+                        type="submit"
+                        disabled={submittingReview}
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-2.5 text-xs font-bold text-primary-foreground shadow hover:opacity-90 disabled:opacity-50 transition-all"
+                      >
+                        {submittingReview ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> Submitting for Review...
+                          </>
+                        ) : (
+                          "Submit Review (Pending Admin Approval)"
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           )}
         </div>

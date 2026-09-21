@@ -11,6 +11,8 @@ export type Product = {
   stock: number;
   unit: string;
   image: string;
+  image2?: string;
+  images?: string[];
   description: string;
   benefits: string[];
   usage: string;
@@ -141,6 +143,29 @@ export type Settings = {
   instagram?: string;
   youtube?: string;
   twitter?: string;
+  // Contact page custom fields
+  workingHours?: string;
+  contactHeroBadge?: string;
+  contactHeroTitle?: string;
+  contactHeroSubtitle?: string;
+  contactHeroImage?: string;
+  facilityName?: string;
+  facilityDescription?: string;
+  facilityLocationTitle?: string;
+  facilityImage?: string;
+  googleMapsUrl?: string;
+  enquiryFormTitle?: string;
+  enquiryFormSubtitle?: string;
+  dealerBadge?: string;
+  dealerTitle?: string;
+  dealerDesc?: string;
+  dealerButtonText?: string;
+  dealerWhatsappText?: string;
+  soilTestingBadge?: string;
+  soilTestingTitle?: string;
+  soilTestingDesc?: string;
+  soilTestingButtonText?: string;
+  soilTestingLinkUrl?: string;
 };
 
 export type Crop = {
