@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, Tag, Trash2, Lock, ArrowRight, ShieldCheck } from "lucide-react";
+import { Minus, Plus, Trash2, Lock, ArrowRight, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { FREE_SHIPPING, SHIPPING_FEE, inr, useApp, useCartTotals, useUser } from "@/lib/store";
 import { PageHero } from "@/components/site/Section";
@@ -13,16 +13,12 @@ export default function CartPage() {
   const { state, setQty, removeFromCart } = useApp();
   const user = useUser();
   const { lines, subtotal } = useCartTotals();
-  const [code, setCode] = React.useState("");
-  const [applied, setApplied] = React.useState<string | null>(null);
-  const coupon = state.coupons.find((c) => c.code === applied) ?? null;
-  const discount = coupon ? Math.round((subtotal * coupon.discount) / 100) : 0;
-  
+
   const freeShippingLimit = state.settings.freeShippingThreshold ?? FREE_SHIPPING;
   const standardShippingFee = state.settings.shippingFee ?? SHIPPING_FEE;
-  const shipping = subtotal - discount >= freeShippingLimit || subtotal === 0 ? 0 : standardShippingFee;
-  const tax = Math.round((subtotal - discount) * 0.05);
-  const total = subtotal - discount + shipping + tax;
+  const shipping = subtotal >= freeShippingLimit || subtotal === 0 ? 0 : standardShippingFee;
+  const tax = Math.round(subtotal * 0.05);
+  const total = subtotal + shipping + tax;
 
   if (lines.length === 0) {
     return (
@@ -98,42 +94,9 @@ export default function CartPage() {
 
         <aside className="h-fit rounded-xl border border-border bg-card p-6 shadow-sm">
           <h2 className="font-display text-xl font-semibold">Order Summary</h2>
-          <div className="mt-4 flex gap-2">
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Coupon code"
-              className="w-full rounded-full border border-border bg-background px-4 py-2 text-sm"
-            />
-            <button
-              onClick={() => {
-                const c = state.coupons.find((x) => x.code === code);
-                if (!c) {
-                  toast.error("Invalid coupon code");
-                  return;
-                }
-                if (subtotal < c.minOrder) {
-                  toast.error(`Minimum order ${inr(c.minOrder)} required`);
-                  return;
-                }
-                setApplied(c.code);
-                localStorage.setItem("phs_coupon", c.code);
-                toast.success(`${c.code} applied — ${c.discount}% off`);
-              }}
-              className="rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
-            >
-              Apply
-            </button>
-          </div>
-          {coupon && (
-            <p className="mt-2 flex items-center gap-1 text-xs text-secondary">
-              <Tag className="h-3 w-3" /> {coupon.code} — {coupon.description}
-            </p>
-          )}
           <dl className="mt-5 space-y-2 text-sm">
             <Row label="Subtotal" value={inr(subtotal)} />
-            <Row label="Discount" value={`- ${inr(discount)}`} />
-            <Row label="Shipping" value={shipping ? inr(shipping) : "Free"} />
+            <Row label="Doorstep Delivery" value={shipping ? inr(shipping) : "Free"} />
             <Row label="GST (5%)" value={inr(tax)} />
             <div className="border-t border-border pt-2">
               <Row label="Total" value={inr(total)} bold />
@@ -166,8 +129,6 @@ export default function CartPage() {
               </span>
             </div>
           )}
-
-          <p className="mt-3 text-center text-xs text-muted-foreground">Available coupons: {state.coupons.map((c) => c.code).join(", ")}</p>
         </aside>
       </div>
     </div>

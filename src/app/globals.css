@@ -148,3 +148,78 @@
     font-family: var(--font-display);
   }
 }
+
+/* ==========================================================================
+   GST Tax Invoice PDF & Print Styles
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* Reset global backgrounds and enforce crisp print readability */
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.35 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, heroes, headers, footers, toolbars, and extraneous elements */
+  header,
+  footer,
+  nav,
+  aside,
+  .print\:hidden,
+  .no-print,
+  [data-sonner-toaster],
+  [role="region"],
+  button:not(.print-allow) {
+    display: none !important;
+  }
+
+  /* Force display of print container */
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:inline-block {
+    display: inline-block !important;
+  }
+
+  .print\:flex {
+    display: flex !important;
+  }
+
+  /* Invoice wrapper specific print resets */
+  .print-invoice-sheet {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Keep table rows and key blocks from breaking across pages */
+  table, tr, td, th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+

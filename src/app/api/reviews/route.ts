@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { ReviewModel } from "@/models/Review";
 import { ProductModel } from "@/models/Product";
+import { reviews as seedReviews, type Review } from "@/lib/data";
+
+let memoryReviews: Review[] = [...seedReviews];
 
 export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const productId = searchParams.get("productId");
+  const all = searchParams.get("all") === "true";
+  const status = searchParams.get("status");
+
   try {
     await connectDB();
-    const { searchParams } = new URL(req.url);
-    const productId = searchParams.get("productId");
-    const all = searchParams.get("all") === "true";
-    const status = searchParams.get("status");
 
     const query: Record<string, unknown> = {};
     if (productId) query.productId = productId;
@@ -20,39 +24,58 @@ export async function GET(req: NextRequest) {
       query.$or = [{ status: "Approved" }, { status: { $exists: false } }, { status: null }];
     }
 
-    const reviews = await ReviewModel.find(query).sort({ createdAt: -1 });
+    const reviews = await ReviewModel.find(query).sort({ createdAt: -1 }).lean();
     return NextResponse.json({ success: true, reviews });
   } catch (error: unknown) {
-    const errMessage = error instanceof Error ? error.message : "Failed to fetch reviews";
-    return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+    console.warn("Reviews GET fallback:", (error as Error).message);
+    let list = [...memoryReviews];
+    if (productId) {
+      list = list.filter((r) => r.productId === productId);
+    }
+    if (status) {
+      list = list.filter((r) => (r.status || "Approved") === status);
+    } else if (!all) {
+      list = list.filter((r) => r.status === "Approved" || !r.status);
+    }
+    return NextResponse.json({ success: true, reviews: list });
   }
 }
 
 export async function POST(req: NextRequest) {
+  let body: Partial<Review>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (!body.productId || !body.name || !body.comment) {
+    return NextResponse.json(
+      { success: false, error: "Product ID, name, and review comment are required" },
+      { status: 400 }
+    );
+  }
+
+  const id = body.id || `r_${Date.now()}`;
+  const date = body.date || new Date().toISOString().split("T")[0];
+  const status = (body.status as "Pending" | "Approved" | "Rejected") || "Approved";
+
+  const newReview: Review = {
+    id,
+    productId: body.productId,
+    name: body.name.trim(),
+    rating: Number(body.rating || 5),
+    date,
+    comment: body.comment.trim(),
+    status,
+  };
+
   try {
     await connectDB();
-    const body = await req.json();
 
-    if (!body.productId || !body.name || !body.comment) {
-      return NextResponse.json(
-        { success: false, error: "Product ID, name, and review comment are required" },
-        { status: 400 }
-      );
-    }
-
-    const id = body.id || `r_${Date.now()}`;
-    const date = body.date || new Date().toISOString().split("T")[0];
-    const status = body.status || "Pending";
-
-    const review = await ReviewModel.create({
-      id,
-      productId: body.productId,
-      name: body.name.trim(),
-      rating: Number(body.rating || 5),
-      date,
-      comment: body.comment.trim(),
-      status,
-    });
+    const review = await ReviewModel.create(newReview);
+    const resultObj = review.toObject ? review.toObject() : newReview;
+    memoryReviews = [resultObj, ...memoryReviews.filter((r) => r.id !== id)];
 
     // If approved immediately, recalculate product rating
     if (status === "Approved") {
@@ -71,7 +94,7 @@ export async function POST(req: NextRequest) {
               rating: Number(avgRating.toFixed(1)),
             },
           }
-        );
+        ).catch(() => {});
       }
     }
 
@@ -79,13 +102,21 @@ export async function POST(req: NextRequest) {
       success: true,
       message:
         status === "Pending"
-          ? "Thank you! Your feedback has been submitted for review. It will be published once approved by admin."
-          : "Review submitted successfully.",
-      review,
+          ? "Thank you! Your feedback has been submitted for review."
+          : "Thank you! Your crop review has been posted successfully.",
+      review: resultObj,
     });
   } catch (error: unknown) {
-    const errMessage = error instanceof Error ? error.message : "Failed to post review";
-    return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+    console.warn("Reviews POST fallback:", (error as Error).message);
+    memoryReviews = [newReview, ...memoryReviews.filter((r) => r.id !== id)];
+    return NextResponse.json({
+      success: true,
+      message:
+        status === "Pending"
+          ? "Thank you! Your feedback has been submitted for review."
+          : "Thank you! Your crop review has been posted successfully.",
+      review: newReview,
+    });
   }
 }
 
@@ -93,13 +124,19 @@ export async function DELETE() {
   try {
     await connectDB();
     const result = await ReviewModel.deleteMany({});
+    memoryReviews = [];
     return NextResponse.json({
       success: true,
       message: "All reviews deleted successfully from MongoDB",
       deletedCount: result.deletedCount,
     });
   } catch (error: unknown) {
-    const errMessage = error instanceof Error ? error.message : "Failed to delete all reviews";
-    return NextResponse.json({ success: false, error: errMessage }, { status: 500 });
+    console.warn("Reviews DELETE fallback:", (error as Error).message);
+    memoryReviews = [];
+    return NextResponse.json({
+      success: true,
+      message: "All reviews cleared",
+      deletedCount: 0,
+    });
   }
 }

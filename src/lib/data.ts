@@ -124,6 +124,25 @@ export type Coupon = {
   description: string;
 };
 
+export type Settings = {
+  name: string;
+  owner: string;
+  phone: string;
+  whatsapp?: string;
+  email1: string;
+  email2: string;
+  address: string;
+  description: string;
+  gst?: string;
+  announcement?: string;
+  freeShippingThreshold?: number;
+  shippingFee?: number;
+  facebook?: string;
+  instagram?: string;
+  youtube?: string;
+  twitter?: string;
+};
+
 export type Crop = {
   slug: string;
   name: string;

@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
               <Mail className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
               <input
                 className={`${inputCls} pl-10`}
-                placeholder="planthealth@gmail.com or admin"
+                placeholder="Enter admin email or username"
                 value={form.user}
                 onChange={(e) => setForm({ ...form, user: e.target.value })}
                 required
@@ -106,16 +106,6 @@ export default function AdminLoginPage() {
             )}
           </button>
         </form>
-
-        <div className="mt-6 rounded-2xl bg-muted/50 p-4 border border-border text-center">
-          <p className="text-xs font-medium text-foreground">Credentials configured in system:</p>
-          <p className="mt-1 font-mono text-xs text-muted-foreground">
-            planthealth@gmail.com / Planthealth@123
-          </p>
-          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/80">
-            or quick demo: admin / admin123
-          </p>
-        </div>
       </div>
     </div>
   );

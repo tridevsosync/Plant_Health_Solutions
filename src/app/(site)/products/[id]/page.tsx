@@ -12,7 +12,7 @@ export default function ProductDetailPage() {
   const params = useParams();
   const id = (params?.id as string) ?? "";
   const router = useRouter();
-  const { state, set, addToCart, toggleWishlist } = useApp();
+  const { state, set, addToCart, toggleWishlist, submitProductReview } = useApp();
   const user = useUser();
   const product = state.products.find((p) => p.id === id);
   const [qty, setQty] = React.useState(1);
@@ -36,7 +36,9 @@ export default function ProductDetailPage() {
   }
 
   const isWished = state.wishlist.includes(product.id);
-  const reviews = state.reviews.filter((r) => r.productId === product.id);
+  const reviews = (state.reviews || []).filter(
+    (r) => r.productId === product.id && (r.status === "Approved" || !r.status)
+  );
   const related = state.products
     .filter((p) => p.category.toLowerCase() === product.category.toLowerCase() && p.id !== product.id)
     .slice(0, 4);
@@ -53,29 +55,24 @@ export default function ProductDetailPage() {
 
     try {
       setSubmittingReview(true);
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product.id,
-          name: form.name.trim(),
-          rating: Number(form.rating),
-          comment: form.comment.trim(),
-          status: "Pending",
-        }),
+      const res = await submitProductReview({
+        productId: product.id,
+        name: form.name.trim(),
+        rating: Number(form.rating),
+        comment: form.comment.trim(),
+        status: "Approved",
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.success) {
         setForm({ name: "", rating: 5, comment: "" });
         toast.success(
-          "Thank you! Your product review has been submitted for verification. It will appear on this product once approved by admin."
+          res.message || "Thank you! Your product review has been posted successfully."
         );
       } else {
-        toast.error(data.error || "Failed to post review");
+        toast.error(res.error || "Failed to post review");
       }
     } catch {
-      toast.error("Network error while submitting review");
+      toast.error("Error while submitting review");
     } finally {
       setSubmittingReview(false);
     }

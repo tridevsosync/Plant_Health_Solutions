@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BadgePercent,
   Boxes,
   FileText,
   LayoutDashboard,
@@ -29,7 +28,6 @@ const nav = [
   { href: "/admin/blogs", label: "Blogs", icon: FileText, exact: false },
   { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote, exact: false },
   { href: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false },
-  { href: "/admin/coupons", label: "Coupons", icon: BadgePercent, exact: false },
   { href: "/admin/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
 

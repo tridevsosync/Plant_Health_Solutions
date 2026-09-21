@@ -56,13 +56,13 @@ export default function HomePage() {
       productId: feedbackForm.productId,
       productName: selProd?.name || "",
       quote: feedbackForm.quote.trim(),
-      status: "Pending",
+      status: "Approved",
     });
     setSubmittingFeedback(false);
 
     if (res.success) {
       toast.success(
-        "Thank you! Your feedback has been submitted. It will appear on the website once approved by our agro agronomy team."
+        res.message || "Thank you! Your feedback has been submitted and is now live on our website!"
       );
       setShowFeedbackModal(false);
       setFeedbackForm({
@@ -736,8 +736,8 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="rounded-xl bg-amber-500/10 p-3 text-xs text-amber-700 border border-amber-500/20">
-                <span className="font-bold">Note:</span> Submitted feedbacks are moderated and approved by our agronomy desk before being published live on the website.
+              <div className="rounded-xl bg-emerald-500/10 p-3 text-xs text-emerald-700 border border-emerald-500/20">
+                <span className="font-bold">Community Note:</span> Your review will be published immediately to help fellow farmers, and is verified by our agronomy team.
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-border">

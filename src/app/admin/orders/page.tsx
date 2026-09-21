@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Eye, Trash2, Printer } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { inr, useApp } from "@/lib/store";
 import type { Order } from "@/lib/data";
 import { AdminPage, Btn, Modal, StatusBadge, TableWrap, inputCls, td, th } from "@/components/site/AdminUI";
 import { Pagination } from "@/components/site/Pagination";
+import { TaxInvoice } from "@/components/site/TaxInvoice";
 
 const STATUSES: Order["status"][] = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
 
@@ -175,77 +176,13 @@ export default function AdminOrdersPage() {
         />
       )}
 
-      <Modal open={!!view} onClose={() => setView(null)} title={`Tax Invoice · ${view?.id ?? ""}`} wide>
+      <Modal open={!!view} onClose={() => setView(null)} title={`GST Tax Invoice · #${view?.id ?? ""}`} wide>
         {view && (
-          <div className="space-y-5 text-sm">
-            <div className="flex flex-wrap justify-between gap-4 border-b border-border pb-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <img src="/logo.png" alt="PHS" className="h-8 w-8 object-contain" />
-                  <p className="font-display text-lg font-bold text-primary">{state.settings.name}</p>
-                </div>
-                <p className="max-w-xs text-xs text-muted-foreground">{state.settings.address}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Phone: {state.settings.phone}
-                  {state.settings.gst ? ` · GSTIN: ${state.settings.gst}` : ""}
-                </p>
-              </div>
-              <div className="text-right">
-                <StatusBadge status={view.status} />
-                <p className="mt-2 text-xs font-semibold text-foreground">Date: {view.date}</p>
-                <p className="text-xs text-muted-foreground">Payment Mode: {view.payment}</p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Billed & Shipped To:</span>
-              <p className="font-bold text-base text-foreground mt-1">{view.customer}</p>
-              <p className="text-xs text-muted-foreground">{view.email} · {view.phone}</p>
-              <p className="text-xs text-foreground mt-1 font-medium">{view.address}</p>
-            </div>
-
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-muted/30">
-                <tr>
-                  <th className={th}>Product Item</th>
-                  <th className={th}>Qty</th>
-                  <th className={th}>Price</th>
-                  <th className={th}>Total Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {view.items.map((i, idx) => (
-                  <tr key={idx}>
-                    <td className={`${td} font-medium`}>{i.name}</td>
-                    <td className={td}>{i.qty}</td>
-                    <td className={td}>{inr(i.price)}</td>
-                    <td className={`${td} font-bold`}>{inr(i.price * i.qty)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="ml-auto grid max-w-xs gap-1.5 rounded-2xl bg-muted/30 p-4 text-sm border border-border">
-              <Row label="Subtotal" value={inr(view.subtotal)} />
-              {view.discount > 0 && <Row label="Discount" value={`- ${inr(view.discount)}`} />}
-              <Row label="Shipping Charge" value={view.shipping === 0 ? "FREE" : inr(view.shipping)} />
-              <Row label="Applicable GST (5%)" value={inr(view.tax)} />
-              <div className="mt-2 flex justify-between border-t border-border pt-2 font-display text-base font-extrabold text-primary">
-                <span>Grand Total</span>
-                <span>{inr(view.total)}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center pt-2 border-t border-border">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
-              >
-                <Printer className="h-4 w-4" /> Print Invoice
-              </button>
+          <div className="space-y-4">
+            <TaxInvoice order={view} settings={state.settings} />
+            <div className="flex justify-end pt-2 border-t border-border">
               <Btn variant="ghost" onClick={() => setView(null)}>
-                Close
+                Close Window
               </Btn>
             </div>
           </div>
@@ -269,11 +206,3 @@ export default function AdminOrdersPage() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between text-xs text-muted-foreground">
-      <span>{label}</span>
-      <span className="font-semibold text-foreground">{value}</span>
-    </div>
-  );
-}

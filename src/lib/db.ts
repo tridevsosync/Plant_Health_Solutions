@@ -23,6 +23,14 @@ export async function connectDB() {
     return cached.conn;
   }
 
+  // If deployed in production (e.g. Vercel) and MONGODB_URI is not provided or points to localhost
+  if (
+    process.env.NODE_ENV === "production" &&
+    (!process.env.MONGODB_URI || process.env.MONGODB_URI.includes("127.0.0.1") || process.env.MONGODB_URI.includes("localhost"))
+  ) {
+    throw new Error("MONGODB_URI is not configured for production environment. Using in-memory fallback store.");
+  }
+
   if (!cached.promise) {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,

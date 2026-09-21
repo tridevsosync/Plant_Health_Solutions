@@ -25,7 +25,8 @@ function CatalogContent() {
 
   const [q, setQ] = React.useState(queryQ);
   const [category, setCategory] = React.useState(queryCat);
-  const [maxPrice, setMaxPrice] = React.useState(5000);
+  const [minPrice, setMinPrice] = React.useState(1);
+  const [maxPrice, setMaxPrice] = React.useState(3000);
   const [inStock, setInStock] = React.useState(false);
   const [sort, setSort] = React.useState("popular");
   const [view, setView] = React.useState<"grid" | "list">("grid");
@@ -59,7 +60,8 @@ function CatalogContent() {
         normPCat.includes(normCat) ||
         normCat.includes(normPCat);
 
-      const matchPrice = maxPrice >= 5000 ? true : p.price <= maxPrice;
+      const matchPrice =
+        p.price >= minPrice && (maxPrice >= 3000 ? true : p.price <= maxPrice);
       const matchStock = !inStock || p.stock > 0;
 
       return matchQ && matchCat && matchPrice && matchStock;
@@ -73,7 +75,7 @@ function CatalogContent() {
     });
 
     return out;
-  }, [state.products, q, category, maxPrice, inStock, sort]);
+  }, [state.products, q, category, minPrice, maxPrice, inStock, sort]);
 
   const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
   const currentPage = Math.min(Math.max(1, page), totalPages);
@@ -146,7 +148,7 @@ function CatalogContent() {
           >
             <span className="flex items-center gap-2">
               <SlidersHorizontal className="h-4 w-4 text-primary" /> Filter &amp; Search Products
-              {(category || q || inStock || maxPrice < 5000) && (
+              {(category || q || inStock || minPrice > 1 || maxPrice < 3000) && (
                 <span className="h-2 w-2 rounded-full bg-primary" />
               )}
             </span>
@@ -161,12 +163,13 @@ function CatalogContent() {
               <h3 className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
                 <SlidersHorizontal className="h-4 w-4 text-primary" /> Filter Products
               </h3>
-              {(category || q || inStock || maxPrice < 5000) && (
+              {(category || q || inStock || minPrice > 1 || maxPrice < 3000) && (
                 <button
                   onClick={() => {
                     setQ("");
                     setCategory("");
-                    setMaxPrice(5000);
+                    setMinPrice(1);
+                    setMaxPrice(3000);
                     setInStock(false);
                     router.push("/products");
                   }}
@@ -246,24 +249,101 @@ function CatalogContent() {
             </div>
           </div>
 
-          {/* Price Range Filter */}
-          <div className="border-t border-border pt-4">
+          {/* Price Range Filter (1₹ to 3000₹) */}
+          <div className="border-t border-border pt-4 space-y-3">
             <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>Price Range</span>
-              <span className="font-bold text-primary">{maxPrice >= 5000 ? "Any Price" : `Up to ${inr(maxPrice)}`}</span>
+              <span>Price Filter</span>
+              <span className="font-bold text-primary">
+                {minPrice === 1 && maxPrice >= 3000
+                  ? "₹1 – ₹3,000 (All)"
+                  : `${inr(minPrice)} – ${inr(maxPrice)}`}
+              </span>
             </div>
-            <input
-              type="range"
-              min={300}
-              max={5000}
-              step={100}
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(Number(e.target.value))}
-              className="mt-2.5 w-full accent-primary cursor-pointer"
-            />
-            <div className="flex justify-between text-[11px] text-muted-foreground mt-1">
-              <span>₹300</span>
-              <span>₹5,000+</span>
+
+            {/* Quick Price Preset Chips */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {[
+                { label: "All (₹1–₹3k)", min: 1, max: 3000 },
+                { label: "Under ₹500", min: 1, max: 500 },
+                { label: "₹500–₹1k", min: 500, max: 1000 },
+                { label: "₹1k–₹2k", min: 1000, max: 2000 },
+                { label: "₹2k–₹3k", min: 2000, max: 3000 },
+              ].map((chip) => {
+                const active = minPrice === chip.min && maxPrice === chip.max;
+                return (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => {
+                      setMinPrice(chip.min);
+                      setMaxPrice(chip.max);
+                      setPage(1);
+                    }}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                      active
+                        ? "bg-primary text-primary-foreground shadow-2xs"
+                        : "border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Slider */}
+            <div>
+              <input
+                type="range"
+                min={1}
+                max={3000}
+                step={25}
+                value={maxPrice}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setMaxPrice(val);
+                  setPage(1);
+                }}
+                className="mt-2 w-full accent-primary cursor-pointer"
+              />
+              <div className="flex justify-between text-[11px] text-muted-foreground mt-1">
+                <span>Min: ₹1</span>
+                <span>Max: ₹3,000</span>
+              </div>
+            </div>
+
+            {/* Manual Min/Max Inputs */}
+            <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-semibold text-muted-foreground">Min (₹)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={maxPrice}
+                  value={minPrice}
+                  onChange={(e) => {
+                    const v = Math.max(1, Math.min(Number(e.target.value) || 1, maxPrice));
+                    setMinPrice(v);
+                    setPage(1);
+                  }}
+                  className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary font-mono"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-semibold text-muted-foreground">Max (₹)</span>
+                <input
+                  type="number"
+                  min={minPrice}
+                  max={3000}
+                  value={maxPrice}
+                  onChange={(e) => {
+                    const v = Math.min(3000, Math.max(Number(e.target.value) || 3000, minPrice));
+                    setMaxPrice(v);
+                    setPage(1);
+                  }}
+                  className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary font-mono"
+                />
+              </div>
             </div>
           </div>
 
@@ -346,7 +426,7 @@ function CatalogContent() {
           </div>
 
           {/* Active filter badges */}
-          {(category || q) && (
+          {(category || q || inStock || minPrice > 1 || maxPrice < 3000) && (
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="text-xs text-muted-foreground">Active Filters:</span>
               {category && (
@@ -361,6 +441,29 @@ function CatalogContent() {
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/10 px-3 py-1 text-xs font-bold text-secondary">
                   Search: {q}
                   <button onClick={() => handleSearch("")} className="hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {(minPrice > 1 || maxPrice < 3000) && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-500/20">
+                  Price: {inr(minPrice)} – {inr(maxPrice)}
+                  <button
+                    onClick={() => {
+                      setMinPrice(1);
+                      setMaxPrice(3000);
+                      setPage(1);
+                    }}
+                    className="hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {inStock && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-800 border border-amber-500/20">
+                  In Stock Only
+                  <button onClick={() => setInStock(false)} className="hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
@@ -382,7 +485,8 @@ function CatalogContent() {
                 onClick={() => {
                   setQ("");
                   setCategory("");
-                  setMaxPrice(5000);
+                  setMinPrice(1);
+                  setMaxPrice(3000);
                   setInStock(false);
                   setPage(1);
                   router.push("/products");

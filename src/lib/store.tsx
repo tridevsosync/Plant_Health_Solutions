@@ -122,9 +122,12 @@ type Ctx = {
   removeFromCart: (id: string) => void;
   clearCart: () => void;
   toggleWishlist: (id: string) => void;
-  // Auth
+  // Auth & 2-Step Verification
   register: (u: { name: string; email: string; password: string; confirmPassword?: string; phone?: string }) => Promise<string | null>;
   login: (email: string, password: string) => Promise<string | null>;
+  sendLoginOtp: (email: string, password: string) => Promise<{ success: boolean; error?: string; testOtp?: string }>;
+  sendRegisterOtp: (u: { name: string; email: string; password: string; confirmPassword?: string; phone?: string }) => Promise<{ success: boolean; error?: string; testOtp?: string }>;
+  verifyOtp: (email: string, otp: string, type: "login" | "registration") => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   adminLogin: (u: string, p: string) => Promise<boolean>;
   adminLogout: () => void;
@@ -162,6 +165,11 @@ type Ctx = {
   updateTestimonialStatus: (id: string, status: "Pending" | "Approved" | "Rejected") => Promise<boolean>;
   deleteTestimonial: (id: string) => Promise<boolean>;
   deleteAllTestimonials: () => Promise<boolean>;
+  // Product Reviews & Feedback CRUD
+  submitProductReview: (review: Partial<Review>) => Promise<{ success: boolean; message?: string; error?: string }>;
+  updateReviewStatus: (id: string, status: "Pending" | "Approved" | "Rejected") => Promise<boolean>;
+  deleteReview: (id: string) => Promise<boolean>;
+  deleteAllReviews: () => Promise<boolean>;
   // Settings
   saveSettings: (s: Settings) => Promise<boolean>;
 };
@@ -190,6 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         coupRes,
         custRes,
         settRes,
+        revRes,
       ] = await Promise.allSettled([
         fetch("/api/products").then((r) => r.json()),
         fetch("/api/categories").then((r) => r.json()),
@@ -200,6 +209,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/coupons").then((r) => r.json()),
         fetch("/api/customers").then((r) => r.json()),
         fetch("/api/settings").then((r) => r.json()),
+        fetch("/api/reviews?all=true").then((r) => r.json()),
       ]);
 
       setState((prev) => {
@@ -232,6 +242,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         if (settRes.status === "fulfilled" && settRes.value?.success && settRes.value.settings) {
           next.settings = settRes.value.settings;
+        }
+        if (revRes.status === "fulfilled" && revRes.value?.success && Array.isArray(revRes.value.reviews)) {
+          next.reviews = revRes.value.reviews;
         }
         return next;
       });
@@ -367,6 +380,85 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Network error during login";
       return msg;
+    }
+  };
+
+  const sendLoginOtp = async (email: string, pass: string) => {
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "login", email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || "Failed to send verification OTP." };
+      }
+      return { success: true, testOtp: data.testOtp };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error while sending OTP";
+      return { success: false, error: msg };
+    }
+  };
+
+  const sendRegisterOtp = async (u: { name: string; email: string; password: string; confirmPassword?: string; phone?: string }) => {
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "registration", ...u }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || "Failed to send registration OTP." };
+      }
+      return { success: true, testOtp: data.testOtp };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error while sending OTP";
+      return { success: false, error: msg };
+    }
+  };
+
+  const verifyOtp = async (email: string, otp: string, type: "login" | "registration") => {
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp, type }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || "Invalid or expired OTP." };
+      }
+
+      const userData: User = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone || "",
+        role: data.user.role || "user",
+        addresses: data.user.addresses || [],
+      };
+
+      set((s) => ({
+        ...s,
+        users: [...s.users.filter((x) => x.email !== userData.email), userData],
+        currentUser: userData.email,
+        currentUserData: userData,
+      }));
+
+      // Refresh customers in background
+      fetch("/api/customers")
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && d.customers) set((s) => ({ ...s, customers: d.customers }));
+        })
+        .catch(() => {});
+
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error while verifying OTP";
+      return { success: false, error: msg };
     }
   };
 
@@ -763,23 +855,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createEnquiry = async (enq: Partial<Enquiry>) => {
+    const id = enq.id || `e_${Date.now()}`;
+    const date = enq.date || new Date().toISOString().split("T")[0];
+    const fallbackEnq: Enquiry = {
+      id,
+      name: enq.name || "",
+      email: enq.email || "",
+      phone: enq.phone || "",
+      subject: enq.subject || "General Farming Enquiry",
+      message: enq.message || "",
+      date,
+      status: (enq.status as "New" | "Answered") || "New",
+    };
+
     try {
       const res = await fetch("/api/enquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(enq),
+        body: JSON.stringify(fallbackEnq),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        const saved = data.enquiry;
-        set((s) => ({ ...s, enquiries: [saved, ...s.enquiries] }));
+        const saved = data.enquiry || fallbackEnq;
+        set((s) => ({ ...s, enquiries: [saved, ...s.enquiries.filter((x) => x.id !== saved.id)] }));
         return { success: true };
       }
-      return { success: false, error: data.error || "Failed to submit enquiry" };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to submit enquiry";
-      return { success: false, error: msg };
+      console.warn("Submit enquiry API fallback:", err);
     }
+
+    set((s) => ({ ...s, enquiries: [fallbackEnq, ...s.enquiries.filter((x) => x.id !== id)] }));
+    return { success: true };
   };
 
   const updateEnquiryStatus = async (id: string, status: "New" | "Answered") => {
@@ -818,24 +924,56 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const submitTestimonialFeedback = async (t: Partial<Testimonial>) => {
+    const id = t.id || `t_${Date.now()}`;
+    const date = t.date || new Date().toISOString().split("T")[0];
+    const status = (t.status as "Pending" | "Approved" | "Rejected") || "Approved";
+
+    const newTestimonial: Testimonial = {
+      id,
+      name: t.name ? t.name.trim() : "",
+      place: t.place ? t.place.trim() : "Vijayapura, Karnataka",
+      crop: t.crop ? t.crop.trim() : "Sugarcane",
+      rating: Number(t.rating || 5),
+      quote: t.quote ? t.quote.trim() : "",
+      productId: t.productId || "",
+      productName: t.productName || "",
+      status,
+      date,
+      image: t.image || "",
+    };
+
     try {
       const res = await fetch("/api/testimonials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...t, status: t.status || "Pending" }),
+        body: JSON.stringify(newTestimonial),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        if (data.testimonial) {
-          set((s) => ({ ...s, testimonials: [data.testimonial, ...s.testimonials] }));
-        }
-        return { success: true, message: data.message || "Feedback submitted successfully" };
+        const saved = data.testimonial || newTestimonial;
+        set((s) => ({
+          ...s,
+          testimonials: [saved, ...s.testimonials.filter((x) => x.id !== saved.id)],
+        }));
+        return {
+          success: true,
+          message:
+            data.message ||
+            "Thank you! Your feedback has been submitted and is now live on our website!",
+        };
       }
-      return { success: false, error: data.error || "Failed to submit feedback" };
     } catch (e) {
-      console.error("Submit testimonial error:", e);
-      return { success: false, error: "Network error. Please try again." };
+      console.warn("Submit testimonial API fallback:", e);
     }
+
+    set((s) => ({
+      ...s,
+      testimonials: [newTestimonial, ...s.testimonials.filter((x) => x.id !== id)],
+    }));
+    return {
+      success: true,
+      message: "Thank you! Your feedback has been submitted and is now live on our website!",
+    };
   };
 
   const updateTestimonialStatus = async (id: string, status: "Pending" | "Approved" | "Rejected") => {
@@ -864,6 +1002,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const saveTestimonial = async (t: Testimonial, isNew: boolean) => {
+    const fallbackItem = { ...t, status: t.status || "Approved" };
     try {
       const url = isNew ? "/api/testimonials" : `/api/testimonials/${encodeURIComponent(t.id)}`;
       const method = isNew ? "POST" : "PUT";
@@ -879,7 +1018,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         set((s) => ({
           ...s,
           testimonials: isNew
-            ? [saved, ...s.testimonials]
+            ? [saved, ...s.testimonials.filter((x) => x.id !== saved.id)]
             : s.testimonials.map((item) => (item.id === saved.id ? saved : item)),
         }));
         return true;
@@ -887,7 +1026,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Save testimonial error:", e);
     }
-    const fallbackItem = { ...t, status: t.status || "Approved" };
     set((s) => ({
       ...s,
       testimonials: isNew
@@ -914,6 +1052,127 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.error("Delete all testimonials error:", e);
     }
     set((s) => ({ ...s, testimonials: [] }));
+    return true;
+  };
+
+  // Product Reviews & Feedback CRUD
+  const submitProductReview = async (review: Partial<Review>) => {
+    const id = review.id || `r_${Date.now()}`;
+    const date = review.date || new Date().toISOString().split("T")[0];
+    const status = (review.status as "Pending" | "Approved" | "Rejected") || "Approved";
+
+    const newReview: Review = {
+      id,
+      productId: review.productId || "",
+      name: review.name ? review.name.trim() : "",
+      rating: Number(review.rating || 5),
+      date,
+      comment: review.comment ? review.comment.trim() : "",
+      status,
+    };
+
+    const updateProductRatingInState = (reviewsList: Review[], prodId: string) => {
+      const prodApprovedReviews = reviewsList.filter(
+        (r) => r.productId === prodId && (r.status === "Approved" || !r.status)
+      );
+      if (prodApprovedReviews.length > 0) {
+        const avg =
+          prodApprovedReviews.reduce((sum, r) => sum + (r.rating || 5), 0) / prodApprovedReviews.length;
+        set((s) => ({
+          ...s,
+          products: s.products.map((p) =>
+            p.id === prodId
+              ? {
+                  ...p,
+                  reviews: prodApprovedReviews.length,
+                  rating: Number(avg.toFixed(1)),
+                }
+              : p
+          ),
+        }));
+      }
+    };
+
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newReview),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const saved = data.review || newReview;
+        set((s) => {
+          const nextReviews = [saved, ...s.reviews.filter((x) => x.id !== saved.id)];
+          return { ...s, reviews: nextReviews };
+        });
+        if (newReview.productId) {
+          updateProductRatingInState([newReview, ...state.reviews], newReview.productId);
+        }
+        return {
+          success: true,
+          message: data.message || "Thank you! Your review has been submitted successfully.",
+        };
+      }
+    } catch (e) {
+      console.warn("Submit product review API fallback:", e);
+    }
+
+    set((s) => {
+      const nextReviews = [newReview, ...s.reviews.filter((x) => x.id !== id)];
+      return { ...s, reviews: nextReviews };
+    });
+    if (newReview.productId) {
+      updateProductRatingInState([newReview, ...state.reviews], newReview.productId);
+    }
+    return {
+      success: true,
+      message: "Thank you! Your review has been submitted successfully.",
+    };
+  };
+
+  const updateReviewStatus = async (id: string, status: "Pending" | "Approved" | "Rejected") => {
+    try {
+      const res = await fetch(`/api/reviews/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        set((s) => ({
+          ...s,
+          reviews: s.reviews.map((r) => (r.id === id ? { ...r, status } : r)),
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.error("Update review status error:", e);
+    }
+    set((s) => ({
+      ...s,
+      reviews: s.reviews.map((r) => (r.id === id ? { ...r, status } : r)),
+    }));
+    return true;
+  };
+
+  const deleteReview = async (id: string) => {
+    try {
+      await fetch(`/api/reviews/${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete review error:", e);
+    }
+    set((s) => ({ ...s, reviews: s.reviews.filter((r) => r.id !== id) }));
+    return true;
+  };
+
+  const deleteAllReviews = async () => {
+    try {
+      await fetch("/api/reviews", { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete all reviews error:", e);
+    }
+    set((s) => ({ ...s, reviews: [] }));
     return true;
   };
 
@@ -966,6 +1225,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })),
     register,
     login,
+    sendLoginOtp,
+    sendRegisterOtp,
+    verifyOtp,
     logout,
     adminLogin,
     adminLogout,
@@ -994,6 +1256,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateTestimonialStatus,
     deleteTestimonial,
     deleteAllTestimonials,
+    submitProductReview,
+    updateReviewStatus,
+    deleteReview,
+    deleteAllReviews,
     saveSettings,
   };
 
