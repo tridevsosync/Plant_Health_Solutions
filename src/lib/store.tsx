@@ -210,6 +210,7 @@ type Ctx = {
   createEnquiry: (enq: Partial<Enquiry>) => Promise<{ success: boolean; error?: string }>;
   updateEnquiryStatus: (id: string, status: "New" | "Answered") => Promise<boolean>;
   deleteEnquiry: (id: string) => Promise<boolean>;
+  deleteAllEnquiries: () => Promise<boolean>;
   // Testimonial & Feedback CRUD
   submitTestimonialFeedback: (t: Partial<Testimonial>) => Promise<{ success: boolean; message?: string; error?: string }>;
   saveTestimonial: (t: Testimonial, isNew: boolean) => Promise<boolean>;
@@ -966,11 +967,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteEnquiry = async (id: string) => {
     try {
-      await fetch(`/api/enquiries/${encodeURIComponent(id)}`, { method: "DELETE" });
+      const res = await fetch(`/api/enquiries/${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (data && data.success === false) {
+        console.error("Delete enquiry API error:", data.error);
+      }
     } catch (e) {
       console.error("Delete enquiry error:", e);
     }
-    set((s) => ({ ...s, enquiries: s.enquiries.filter((e) => e.id !== id) }));
+    const cleanId = String(id).trim();
+    set((s) => ({
+      ...s,
+      enquiries: s.enquiries.filter((e) => {
+        const eId = String(e.id || "").trim();
+        const eMongoId = String((e as unknown as { _id?: string })._id || "").trim();
+        return eId !== cleanId && eMongoId !== cleanId && e.id !== id;
+      }),
+    }));
+    return true;
+  };
+
+  const deleteAllEnquiries = async () => {
+    try {
+      await fetch("/api/enquiries", { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete all enquiries error:", e);
+    }
+    set((s) => ({ ...s, enquiries: [] }));
     return true;
   };
 
@@ -1381,6 +1404,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     createEnquiry,
     updateEnquiryStatus,
     deleteEnquiry,
+    deleteAllEnquiries,
     submitTestimonialFeedback,
     saveTestimonial,
     updateTestimonialStatus,

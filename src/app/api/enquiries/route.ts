@@ -13,7 +13,12 @@ export async function GET() {
     if (count === 0 && seedEnquiries.length > 0) {
       await EnquiryModel.insertMany(seedEnquiries).catch(() => {});
     }
-    const enquiries = await EnquiryModel.find({}).sort({ createdAt: -1 }).lean();
+    const docs = await EnquiryModel.find({}).sort({ createdAt: -1 }).lean();
+    const enquiries = docs.map((doc) => ({
+      ...doc,
+      id: doc.id || (doc._id ? String(doc._id) : `e_${Date.now()}`),
+      _id: doc._id ? String(doc._id) : undefined,
+    }));
     return NextResponse.json({ success: true, enquiries });
   } catch (error: unknown) {
     console.warn("Enquiries GET fallback:", (error as Error).message);

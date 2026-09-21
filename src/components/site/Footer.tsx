@@ -17,7 +17,7 @@ export function Footer() {
           {/* Column 1: Brand Info */}
           <div className="flex flex-col">
             <Link href="/" className="inline-flex items-center gap-3 group w-fit">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1 shadow-xs transition-transform group-hover:scale-105">
+              <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white p-1 shadow-xs transition-transform group-hover:scale-105 shrink-0 overflow-hidden">
                 <img
                   src="/logo.png"
                   alt={s.name || "Plant Health Solutions"}

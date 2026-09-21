@@ -130,9 +130,9 @@ export function Header() {
 
       {/* Main Navbar */}
       <div className="bg-[#fbf8f1] border-b border-[#e9e2d3]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 gap-2 sm:gap-4">
           {/* Left: Mobile Hamburger & Brand Logo */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             {/* Mobile Menu Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -145,9 +145,9 @@ export function Header() {
             {/* Logo & Brand Name */}
             <Link
               href="/"
-              className="flex items-center gap-2 sm:gap-3 group select-none shrink-0 min-w-0"
+              className="flex items-center gap-2 sm:gap-3 group select-none min-w-0"
             >
-              <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-xs border border-[#e5decb]">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 lg:h-13 lg:w-13 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-xs border border-[#e5decb] overflow-hidden">
                 <img
                   src="/logo.png"
                   alt="Plant Health Solutions"
@@ -155,16 +155,16 @@ export function Header() {
                 />
               </div>
               <div className="flex flex-col leading-tight min-w-0">
-                <span className="font-display text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-[#1a3820] truncate">
+                <span className="font-display text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-[#1a3820] truncate">
                   Plant Health <span className="text-[#4e8837]">Solutions</span>
                 </span>
-                <span className="text-[10px] text-[#5c6b59] hidden sm:block">Agricultural Research &amp; Bio Inputs</span>
+                <span className="text-[10px] text-[#5c6b59] hidden md:block truncate">Agricultural Research &amp; Bio Inputs</span>
               </div>
             </Link>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-5 xl:gap-7">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 shrink-0">
             {links.map((link) => {
               const isActive =
                 link.href === "/"
@@ -176,7 +176,7 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "text-[14px] xl:text-[15px] font-semibold transition-colors duration-200 py-1 border-b-2",
+                    "text-[13px] xl:text-[14px] font-semibold transition-colors duration-200 py-1 border-b-2 whitespace-nowrap",
                     isActive
                       ? "text-[#4e8837] border-[#4e8837]"
                       : "text-[#283928] border-transparent hover:text-[#4e8837]"
@@ -189,7 +189,7 @@ export function Header() {
           </nav>
 
           {/* Right Action Icons */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto sm:ml-0">
             {/* Search Toggle Button */}
             <button
               onClick={() => setSearchOpen((prev) => !prev)}
@@ -202,11 +202,11 @@ export function Header() {
               <Search className="h-5 w-5 stroke-[1.8]" />
             </button>
 
-            {/* Wishlist Button */}
+            {/* Wishlist Button (hidden on mobile, shown on sm+) */}
             <Link
               href="/wishlist"
               aria-label="Wishlist"
-              className="relative flex h-9 w-9 items-center justify-center rounded-full text-[#1a3820] transition-colors hover:bg-black/5 hover:text-[#4e8837]"
+              className="relative hidden sm:flex h-9 w-9 items-center justify-center rounded-full text-[#1a3820] transition-colors hover:bg-black/5 hover:text-[#4e8837]"
             >
               <Heart className="h-5 w-5 stroke-[1.8]" />
               {state.wishlist.length > 0 && (
@@ -242,7 +242,7 @@ export function Header() {
                     <span className="hidden md:inline-block max-w-[100px] truncate text-[#1a3820]">
                       {user.name?.split(" ")[0] || "Account"}
                     </span>
-                    <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-[#4e8837] text-white text-xs font-bold shadow-xs">
+                    <div className="relative flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-[#4e8837] text-white text-xs font-bold shadow-xs">
                       {userInitial}
                       <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-[#fbf8f1]" />
                     </div>
@@ -329,14 +329,26 @@ export function Header() {
                   )}
                 </div>
               ) : (
-                <Link
-                  href="/login"
-                  aria-label="Sign in"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#4e8837] text-white px-3 py-1.5 text-xs font-semibold transition-all hover:bg-[#3e7230] shadow-2xs"
-                >
-                  <User className="h-3.5 w-3.5 stroke-[2.2]" />
-                  <span>Sign In</span>
-                </Link>
+                <>
+                  {/* Mobile Compact Sign In */}
+                  <Link
+                    href="/login"
+                    aria-label="Sign in"
+                    className="flex sm:hidden h-9 w-9 items-center justify-center rounded-full bg-[#4e8837] text-white transition-all hover:bg-[#3e7230] shadow-2xs"
+                  >
+                    <User className="h-4 w-4 stroke-[2.2]" />
+                  </Link>
+
+                  {/* Desktop / Tablet Sign In with label */}
+                  <Link
+                    href="/login"
+                    aria-label="Sign in"
+                    className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[#4e8837] text-white px-3 sm:px-3.5 py-1.5 text-xs font-semibold transition-all hover:bg-[#3e7230] shadow-2xs"
+                  >
+                    <User className="h-3.5 w-3.5 stroke-[2.2]" />
+                    <span>Sign In</span>
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -414,12 +426,12 @@ export function Header() {
           <aside className="fixed inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col bg-[#fbf8f1] shadow-2xl transition-transform animate-in slide-in-from-left duration-300">
             {/* Drawer Header */}
             <div className="flex items-center justify-between border-b border-[#e9e2d3] bg-[#18361e] p-4 text-[#f4efe4]">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white p-1 shadow-xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-xs overflow-hidden">
                   <img src="/logo.png" alt="Plant Health Solutions" className="h-full w-full object-contain" />
                 </div>
-                <div>
-                  <p className="font-display text-base font-bold text-white leading-tight">Plant Health Solutions</p>
+                <div className="min-w-0">
+                  <p className="font-display text-base font-bold text-white leading-tight truncate">Plant Health Solutions</p>
                   <p className="text-[10px] text-[#a8d672]">Vijayapura Center</p>
                 </div>
               </div>

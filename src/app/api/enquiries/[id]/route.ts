@@ -19,10 +19,18 @@ export async function PUT(
   try {
     await connectDB();
     const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
-    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
+    const escaped = clean.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const orConditions: Array<Record<string, unknown>> = [
+      { id: clean },
+      { id: new RegExp(`^${escaped}$`, "i") },
+    ];
+    if (isObjectId) {
+      orConditions.push({ _id: new mongoose.Types.ObjectId(clean) });
+      orConditions.push({ _id: clean });
+    }
 
     const updated = await EnquiryModel.findOneAndUpdate(
-      query,
+      { $or: orConditions },
       { $set: body },
       { new: true }
     );
@@ -31,7 +39,13 @@ export async function PUT(
       return NextResponse.json({ success: true, enquiry: { id: clean, ...body } });
     }
 
-    return NextResponse.json({ success: true, enquiry: updated });
+    return NextResponse.json({
+      success: true,
+      enquiry: {
+        ...updated.toObject(),
+        id: updated.id || String(updated._id),
+      },
+    });
   } catch (error: unknown) {
     console.warn("Enquiry PUT fallback:", (error as Error).message);
     return NextResponse.json({ success: true, enquiry: { id: clean, ...body } });
@@ -48,8 +62,17 @@ export async function DELETE(
   try {
     await connectDB();
     const isObjectId = mongoose.Types.ObjectId.isValid(clean) && /^[0-9a-fA-F]{24}$/.test(clean);
-    const query = isObjectId ? { $or: [{ id: clean }, { _id: clean }] } : { id: clean };
-    const deleted = await EnquiryModel.deleteMany(query);
+    const escaped = clean.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const orConditions: Array<Record<string, unknown>> = [
+      { id: clean },
+      { id: new RegExp(`^${escaped}$`, "i") },
+    ];
+    if (isObjectId) {
+      orConditions.push({ _id: new mongoose.Types.ObjectId(clean) });
+      orConditions.push({ _id: clean });
+    }
+
+    const deleted = await EnquiryModel.deleteMany({ $or: orConditions });
 
     return NextResponse.json({
       success: true,
