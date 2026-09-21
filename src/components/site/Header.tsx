@@ -29,11 +29,11 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/about", label: "About", icon: Info },
   { href: "/products", label: "Products", icon: Package },
   { href: "/categories", label: "Categories", icon: Boxes },
   { href: "/farmer-solutions", label: "Farmer Solutions", icon: Sprout },
   { href: "/blog", label: "Blog", icon: FileText },
-  { href: "/about", label: "About", icon: Info },
   { href: "/contact", label: "Contact", icon: Phone },
 ] as const;
 
