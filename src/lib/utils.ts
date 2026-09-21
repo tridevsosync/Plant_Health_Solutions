@@ -119,3 +119,89 @@ export function formatTaxInvoiceNo(orderId: string): string {
   const shortCode = cleanId.length > 6 ? cleanId.slice(-6) : cleanId.padStart(5, "0");
   return `PHS/2026-27/INV-${shortCode}`;
 }
+
+export const INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
+] as const;
+
+export const GST_STATE_CODES: Record<string, string> = {
+  "Andaman and Nicobar Islands": "35",
+  "Andhra Pradesh": "37",
+  "Arunachal Pradesh": "12",
+  "Assam": "18",
+  "Bihar": "10",
+  "Chandigarh": "04",
+  "Chhattisgarh": "22",
+  "Dadra and Nagar Haveli and Daman and Diu": "26",
+  "Delhi": "07",
+  "Goa": "30",
+  "Gujarat": "24",
+  "Haryana": "06",
+  "Himachal Pradesh": "02",
+  "Jammu and Kashmir": "01",
+  "Jharkhand": "20",
+  "Karnataka": "29",
+  "Kerala": "32",
+  "Ladakh": "38",
+  "Lakshadweep": "31",
+  "Madhya Pradesh": "23",
+  "Maharashtra": "27",
+  "Manipur": "14",
+  "Meghalaya": "17",
+  "Mizoram": "15",
+  "Nagaland": "13",
+  "Odisha": "21",
+  "Puducherry": "34",
+  "Punjab": "03",
+  "Rajasthan": "08",
+  "Sikkim": "11",
+  "Tamil Nadu": "33",
+  "Telangana": "36",
+  "Tripura": "16",
+  "Uttar Pradesh": "09",
+  "Uttarakhand": "05",
+  "West Bengal": "19",
+};
+
+export function getStateGstDisplay(stateName?: string): string {
+  if (!stateName) return "Karnataka (29)";
+  const code = GST_STATE_CODES[stateName.trim()];
+  if (code) return `${stateName.trim()} (${code})`;
+  return stateName.trim();
+}
+

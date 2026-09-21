@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { inr, useApp, useUser, type Address } from "@/lib/store";
 import { PageHero } from "@/components/site/Section";
+import { INDIAN_STATES } from "@/lib/utils";
 
 function AccountContent() {
   const {
@@ -102,6 +103,7 @@ function AccountContent() {
     label: "Home",
     line: "",
     city: "",
+    state: "Karnataka",
     pincode: "",
   });
 
@@ -296,7 +298,7 @@ function AccountContent() {
     if (ok) {
       toast.success("Address added successfully!");
       setShowAddressModal(false);
-      setAddrForm({ label: "Home", line: "", city: "", pincode: "" });
+      setAddrForm({ label: "Home", line: "", city: "", state: "Karnataka", pincode: "" });
     } else {
       toast.error("Failed to save address.");
     }
@@ -1085,7 +1087,9 @@ function AccountContent() {
                         </button>
                       </div>
                       <p className="text-sm font-medium text-foreground">{addr.line}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{addr.city}, {addr.pincode}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {addr.city}{addr.state ? `, ${addr.state}` : ""} - {addr.pincode}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -1131,15 +1135,31 @@ function AccountContent() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-semibold uppercase text-muted-foreground">Pincode</label>
-                          <input
+                          <label className="text-xs font-semibold uppercase text-muted-foreground">State</label>
+                          <select
                             required
-                            value={addrForm.pincode}
-                            onChange={(e) => setAddrForm({ ...addrForm, pincode: e.target.value })}
-                            placeholder="586119"
+                            value={addrForm.state || "Karnataka"}
+                            onChange={(e) => setAddrForm({ ...addrForm, state: e.target.value })}
                             className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                          />
+                          >
+                            {INDIAN_STATES.map((st) => (
+                              <option key={st} value={st}>
+                                {st}
+                              </option>
+                            ))}
+                          </select>
                         </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">Pincode</label>
+                        <input
+                          required
+                          maxLength={6}
+                          value={addrForm.pincode}
+                          onChange={(e) => setAddrForm({ ...addrForm, pincode: e.target.value.replace(/\D/g, "") })}
+                          placeholder="586119"
+                          className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                        />
                       </div>
                       <div className="mt-6 flex justify-end gap-3 pt-2">
                         <button

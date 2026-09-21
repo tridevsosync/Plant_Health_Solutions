@@ -4,6 +4,7 @@ export interface IUserAddress {
   label: string;
   line: string;
   city: string;
+  state?: string;
   pincode: string;
 }
 
@@ -23,6 +24,7 @@ const AddressSchema = new Schema<IUserAddress>(
     label: { type: String, default: "Home" },
     line: { type: String, required: true },
     city: { type: String, required: true },
+    state: { type: String, default: "" },
     pincode: { type: String, required: true },
   },
   { _id: false }

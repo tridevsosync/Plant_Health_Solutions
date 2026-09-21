@@ -26,7 +26,7 @@ import {
 const KEY = "phs_state_v5";
 
 export type CartLine = { id: string; qty: number };
-export type Address = { label: string; line: string; city: string; pincode: string };
+export type Address = { label: string; line: string; city: string; state?: string; pincode: string };
 export type User = {
   id?: string;
   name: string;

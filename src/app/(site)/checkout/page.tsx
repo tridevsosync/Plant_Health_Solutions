@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { FREE_SHIPPING, SHIPPING_FEE, inr, useApp, useCartTotals, useUser } from "@/lib/store";
 import { PageHero } from "@/components/site/Section";
+import { INDIAN_STATES } from "@/lib/utils";
 
 interface RazorpayResponse {
   razorpay_payment_id: string;
@@ -94,6 +95,7 @@ export default function CheckoutPage() {
     email: user?.email ?? "",
     line: user?.addresses?.[0]?.line ?? "",
     city: user?.addresses?.[0]?.city ?? "",
+    state: user?.addresses?.[0]?.state ?? "Karnataka",
     pincode: user?.addresses?.[0]?.pincode ?? "",
   });
 
@@ -136,16 +138,18 @@ export default function CheckoutPage() {
         email: prev.email || user.email || "",
         line: prev.line || user.addresses?.[0]?.line || "",
         city: prev.city || user.addresses?.[0]?.city || "",
+        state: prev.state || user.addresses?.[0]?.state || "Karnataka",
         pincode: prev.pincode || user.addresses?.[0]?.pincode || "",
       }));
     }
   }, [user]);
 
-  const selectSavedAddress = (saved: { line: string; city: string; pincode: string }) => {
+  const selectSavedAddress = (saved: { line: string; city: string; state?: string; pincode: string }) => {
     setAddr((prev) => ({
       ...prev,
       line: saved.line,
       city: saved.city,
+      state: saved.state || "Karnataka",
       pincode: saved.pincode,
     }));
     toast.success("Delivery address selected!");
@@ -373,11 +377,12 @@ export default function CheckoutPage() {
       }));
 
     setSubmitting(true);
+    const fullFormattedAddress = `${addr.line.trim()}, ${addr.city.trim()}, ${addr.state.trim()} - ${addr.pincode.trim()}`;
     const result = await createOrder({
       id,
-      customer: addr.name,
-      email: user?.email || addr.email,
-      phone: addr.phone,
+      customer: addr.name.trim(),
+      email: addr.email.trim().toLowerCase() || user?.email || "",
+      phone: addr.phone.trim(),
       date: new Date().toISOString().slice(0, 10),
       status: "Pending",
       items,
@@ -386,7 +391,10 @@ export default function CheckoutPage() {
       shipping,
       tax,
       total,
-      address: `${addr.line}, ${addr.city} - ${addr.pincode}`,
+      address: fullFormattedAddress,
+      city: addr.city.trim(),
+      state: addr.state.trim(),
+      pincode: addr.pincode.trim(),
       payment: paymentDetails.paymentMethod,
       paymentId: paymentDetails.paymentId || "",
       paymentStatus: paymentDetails.paymentStatus || "Paid",
@@ -412,8 +420,16 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!addr.name || !addr.phone || !addr.line || !addr.city || !addr.pincode) {
-      toast.error("Please complete the delivery address");
+    if (
+      !addr.name.trim() ||
+      !addr.phone.trim() ||
+      !addr.email.trim() ||
+      !addr.line.trim() ||
+      !addr.city.trim() ||
+      !addr.state.trim() ||
+      !addr.pincode.trim()
+    ) {
+      toast.error("Please complete all contact and delivery address fields");
       setStep(1);
       return;
     }
@@ -901,7 +917,7 @@ export default function CheckoutPage() {
                               <div className="font-bold text-foreground text-xs">{saved.label}</div>
                               <div className="truncate mt-0.5">{saved.line}</div>
                               <div>
-                                {saved.city}, {saved.pincode}
+                                {saved.city}{saved.state ? `, ${saved.state}` : ""} - {saved.pincode}
                               </div>
                             </button>
                           ))}
@@ -910,29 +926,102 @@ export default function CheckoutPage() {
                     )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      {[
-                        ["name", "Full Name"],
-                        ["phone", "Phone Number"],
-                        ["email", "Email Address"],
-                        ["city", "City / Taluk"],
-                        ["pincode", "Pincode"],
-                      ].map(([k, label]) => (
-                        <label key={k} className="text-sm">
-                          <span className="mb-1 block font-medium text-foreground">{label}</span>
-                          <input
-                            value={(addr as Record<string, string>)[k as string] ?? ""}
-                            onChange={(e) => setAddr({ ...addr, [k as string]: e.target.value })}
-                            className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                          />
-                        </label>
-                      ))}
+                      <label className="text-sm">
+                        <span className="mb-1 block font-medium text-foreground">
+                          Full Name <span className="text-destructive">*</span>
+                        </span>
+                        <input
+                          required
+                          value={addr.name}
+                          onChange={(e) => setAddr({ ...addr, name: e.target.value })}
+                          placeholder="e.g. Ramesh Patil"
+                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </label>
+
+                      <label className="text-sm">
+                        <span className="mb-1 block font-medium text-foreground">
+                          Mobile No <span className="text-destructive">*</span>
+                        </span>
+                        <input
+                          required
+                          type="tel"
+                          value={addr.phone}
+                          onChange={(e) => setAddr({ ...addr, phone: e.target.value })}
+                          placeholder="e.g. +91 98450 12345"
+                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </label>
+
                       <label className="text-sm sm:col-span-2">
-                        <span className="mb-1 block font-medium text-foreground">Delivery Farm / House Address</span>
+                        <span className="mb-1 block font-medium text-foreground">
+                          Email Address <span className="text-destructive">*</span>
+                        </span>
+                        <input
+                          required
+                          type="email"
+                          value={addr.email}
+                          onChange={(e) => setAddr({ ...addr, email: e.target.value })}
+                          placeholder="farmer@example.com"
+                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </label>
+
+                      <label className="text-sm">
+                        <span className="mb-1 block font-medium text-foreground">
+                          City / Taluk <span className="text-destructive">*</span>
+                        </span>
+                        <input
+                          required
+                          value={addr.city}
+                          onChange={(e) => setAddr({ ...addr, city: e.target.value })}
+                          placeholder="e.g. Vijayapura / Athani"
+                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </label>
+
+                      <label className="text-sm">
+                        <span className="mb-1 block font-medium text-foreground">
+                          State <span className="text-destructive">*</span>
+                        </span>
+                        <select
+                          required
+                          value={addr.state}
+                          onChange={(e) => setAddr({ ...addr, state: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                          {INDIAN_STATES.map((st) => (
+                            <option key={st} value={st}>
+                              {st}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="text-sm sm:col-span-2">
+                        <span className="mb-1 block font-medium text-foreground">
+                          Pincode <span className="text-destructive">*</span>
+                        </span>
+                        <input
+                          required
+                          maxLength={6}
+                          value={addr.pincode}
+                          onChange={(e) => setAddr({ ...addr, pincode: e.target.value.replace(/\D/g, "") })}
+                          placeholder="e.g. 586119"
+                          className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </label>
+
+                      <label className="text-sm sm:col-span-2">
+                        <span className="mb-1 block font-medium text-foreground">
+                          Delivery Farm / House Address <span className="text-destructive">*</span>
+                        </span>
                         <textarea
+                          required
                           value={addr.line}
                           onChange={(e) => setAddr({ ...addr, line: e.target.value })}
                           rows={3}
-                          placeholder="Plot / Survey No., Village, Landmark"
+                          placeholder="Plot / Survey No., Village, Post, Landmark"
                           className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       </label>
@@ -941,8 +1030,16 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!addr.name || !addr.phone || !addr.line || !addr.city || !addr.pincode) {
-                          toast.error("Please fill in all address fields");
+                        if (
+                          !addr.name.trim() ||
+                          !addr.phone.trim() ||
+                          !addr.email.trim() ||
+                          !addr.line.trim() ||
+                          !addr.city.trim() ||
+                          !addr.state.trim() ||
+                          !addr.pincode.trim()
+                        ) {
+                          toast.error("Please fill in all contact and delivery address fields");
                           return;
                         }
                         setStep(2);
@@ -1034,15 +1131,27 @@ export default function CheckoutPage() {
 
                     <div className="mt-5 rounded-2xl bg-muted/60 p-4 border border-border space-y-2 text-xs sm:text-sm">
                       <div className="flex items-start justify-between">
-                        <span className="font-semibold text-foreground">Delivery To:</span>
-                        <span className="text-right text-muted-foreground">
-                          {addr.name} ({addr.phone})
+                        <span className="font-semibold text-foreground">Customer:</span>
+                        <span className="text-right font-medium text-foreground">
+                          {addr.name}
                         </span>
                       </div>
                       <div className="flex items-start justify-between">
-                        <span className="font-semibold text-foreground">Farm Address:</span>
+                        <span className="font-semibold text-foreground">Mobile No:</span>
+                        <span className="text-right text-muted-foreground font-mono">
+                          {addr.phone}
+                        </span>
+                      </div>
+                      <div className="flex items-start justify-between">
+                        <span className="font-semibold text-foreground">Email:</span>
+                        <span className="text-right text-muted-foreground">
+                          {addr.email || user.email}
+                        </span>
+                      </div>
+                      <div className="flex items-start justify-between">
+                        <span className="font-semibold text-foreground">Delivery Address:</span>
                         <span className="text-right text-muted-foreground max-w-[280px]">
-                          {addr.line}, {addr.city} - {addr.pincode}
+                          {addr.line}, {addr.city}, {addr.state} - {addr.pincode}
                         </span>
                       </div>
                       <div className="flex items-start justify-between">

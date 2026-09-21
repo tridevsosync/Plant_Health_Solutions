@@ -99,6 +99,9 @@ export type Order = {
   tax: number;
   total: number;
   address: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
   payment: string;
   paymentId?: string;
   paymentStatus?: "Pending" | "Paid" | "Failed";
@@ -1023,52 +1026,14 @@ export const testimonials: Testimonial[] = tNames.map(([name, place, crop], i) =
   quote: `After switching to Plant Health Solutions products my ${crop.toLowerCase()} crop showed visibly darker leaves within three weeks. The field officers from Tidagundi visited my plot and gave a full schedule. Yield improved and input cost came down this season.`,
 }));
 
-export const customers: Customer[] = ([
-  ["Basavaraj Patil", "basavaraj.patil@gmail.com", "+91 98860 11223", "Vijayapura", 6],
-  ["Shivanand Hiremath", "shivanand.h@gmail.com", "+91 94480 33445", "Bagalkot", 4],
-  ["Mahadev Jadhav", "mahadev.jadhav@gmail.com", "+91 98220 55667", "Solapur", 3],
-  ["Ravi Kumar N", "ravikumar.n@gmail.com", "+91 90080 77889", "Raichur", 2],
-  ["Sangappa Biradar", "sangappa.b@gmail.com", "+91 93410 99001", "Kalaburagi", 5],
-  ["Prakash Deshmukh", "prakash.d@gmail.com", "+91 98500 22334", "Latur", 1],
-  ["Ningappa Gouda", "ningappa.g@gmail.com", "+91 97400 44556", "Belagavi", 3],
-  ["Suresh Kulkarni", "suresh.k@gmail.com", "+91 99860 66778", "Dharwad", 2],
-  ["Anil Shinde", "anil.shinde@gmail.com", "+91 98900 88990", "Pune", 4],
-  ["Mallikarjun Sindagi", "mallikarjun.s@gmail.com", "+91 90360 11224", "Vijayapura", 2],
-  ["Ganesh Pawar", "ganesh.pawar@gmail.com", "+91 94220 33446", "Sangli", 1],
-  ["Rudrappa Talikoti", "rudrappa.t@gmail.com", "+91 91750 55668", "Bagalkot", 3],
-] as [string, string, string, string, number][]).map((c, i) => ({
-  id: `CU${String(i + 1).padStart(3, "0")}`,
-  name: c[0],
-  email: c[1],
-  phone: c[2],
-  city: c[3],
-  orders: c[4],
-  active: i % 9 !== 0,
-}));
+export const customers: Customer[] = [];
 
 export const orders: Order[] = [];
 
 export const reviews: Review[] = [];
 
-export const enquiries: Enquiry[] = Array.from({ length: 10 }, (_, i) => ({
-  id: `E${String(i + 1).padStart(3, "0")}`,
-  name: pick(tNames, i + 5)[0],
-  phone: `+91 9${String(400000000 + i * 1234567).slice(0, 9)}`,
-  email: `farmer${i + 1}@gmail.com`,
-  subject: pick(["Product Enquiry", "Dealership", "Agronomy Advice", "Bulk Order", "Complaint"], i),
-  message:
-    "Please suggest a complete nutrition and protection schedule for my crop. I have 8 acres under drip irrigation and a recent soil test report available.",
-  date: `2026-0${(i % 9) + 1}-2${i % 8}`,
-  status: i % 3 === 0 ? "Answered" : "New",
-}));
+export const enquiries: Enquiry[] = [];
 
-export const coupons: Coupon[] = [
-  { code: "KHARIF10", discount: 10, minOrder: 1500, description: "10% off on Kharif season inputs" },
-  { code: "SOIL200", discount: 8, minOrder: 2500, description: "Soil health package saver" },
-  { code: "FARMER15", discount: 15, minOrder: 5000, description: "15% off for bulk farmer orders" },
-  { code: "DRIP500", discount: 12, minOrder: 4000, description: "Drip fertigation combo offer" },
-  { code: "RESEARCH5", discount: 5, minOrder: 800, description: "Flat 5% research launch offer" },
-];
 
 const cropSeed: [string, string, string[], string[]][] = [
   [
@@ -1163,4 +1128,25 @@ export const stats = [
   { label: "Farmers Served", value: "42,000+" },
   { label: "Field Trials Completed", value: "650+" },
   { label: "Products Manufactured", value: "30+" },
+];
+
+export const coupons: Coupon[] = [
+  {
+    code: "FARMER10",
+    discount: 10,
+    minOrder: 1000,
+    description: "10% off on all organic fertilizers for orders above ₹1,000",
+  },
+  {
+    code: "PHS500",
+    discount: 500,
+    minOrder: 5000,
+    description: "Flat ₹500 discount on bulk farm inputs above ₹5,000",
+  },
+  {
+    code: "BIOPROMO",
+    discount: 15,
+    minOrder: 2000,
+    description: "15% off on bio-fertilizer and micro-nutrient kits",
+  },
 ];

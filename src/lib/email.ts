@@ -232,7 +232,7 @@ export async function sendOrderConfirmationEmail(
 
     <div style="background: #f8faf7; border: 1px solid #e2ece0; border-radius: 12px; padding: 16px; margin: 20px 0;">
       <div style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #4f8a3c;">Delivery Address:</div>
-      <div style="font-weight: 600; color: #18361e; margin-top: 4px;">${order.customer} (${order.phone})</div>
+      <div style="font-weight: 600; color: #18361e; margin-top: 4px;">${order.customer} · Phone: ${order.phone} · Email: ${order.email}</div>
       <div style="font-size: 13px; color: #4a5568;">${order.address}</div>
       <div style="font-size: 12px; color: #718096; margin-top: 6px;">Payment Method: <strong>${order.payment}</strong> · Status: <strong>${order.paymentStatus || "Paid"}</strong></div>
     </div>

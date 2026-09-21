@@ -67,6 +67,9 @@ export async function POST(req: NextRequest) {
     email: body.email.trim().toLowerCase(),
     phone: body.phone || "",
     address: body.address || "",
+    city: body.city || "",
+    state: body.state || "",
+    pincode: body.pincode || "",
     items: body.items,
     subtotal: Number(body.subtotal || body.total || 0),
     discount: Number(body.discount || 0),
@@ -88,18 +91,23 @@ export async function POST(req: NextRequest) {
     const resultObj = order.toObject ? order.toObject() : newOrder;
     memoryOrders = [resultObj, ...memoryOrders.filter((o) => o.id !== id)];
 
-    // Update customer stats
+    // Update or create customer record
     const cleanEmail = body.email.trim().toLowerCase();
-    const existingCust = await CustomerModel.findOne({ email: cleanEmail });
-    if (existingCust) {
-      await CustomerModel.updateOne(
-        { email: cleanEmail },
-        {
-          $inc: { orders: 1 },
-          $set: { active: true },
-        }
-      ).catch(() => {});
-    }
+    await CustomerModel.findOneAndUpdate(
+      { email: cleanEmail },
+      {
+        $inc: { orders: 1 },
+        $set: { active: true },
+        $setOnInsert: {
+          id: `c_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          name: body.customer || "Customer",
+          email: cleanEmail,
+          phone: body.phone || "",
+          city: body.city || "Karnataka",
+        },
+      },
+      { upsert: true, new: true }
+    ).catch(() => {});
 
     // Trigger Order Confirmation Email asynchronously
     sendOrderConfirmationEmail(resultObj).catch((e) =>

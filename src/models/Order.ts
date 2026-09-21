@@ -23,6 +23,9 @@ export interface IOrder extends Document {
   tax: number;
   total: number;
   address: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
   payment: string;
   paymentId?: string;
   paymentStatus?: "Pending" | "Paid" | "Failed";
@@ -65,6 +68,9 @@ const OrderSchema = new Schema<IOrder>(
     tax: { type: Number, default: 0 },
     total: { type: Number, required: true },
     address: { type: String, required: true },
+    city: { type: String, default: "" },
+    state: { type: String, default: "" },
+    pincode: { type: String, default: "" },
     payment: { type: String, default: "Razorpay (Online)" },
     paymentId: { type: String, default: "" },
     paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed"], default: "Paid" },

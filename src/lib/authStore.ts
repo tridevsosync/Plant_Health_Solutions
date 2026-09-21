@@ -14,6 +14,7 @@ export interface StoredUser {
     label: string;
     line: string;
     city: string;
+    state?: string;
     pincode: string;
   }>;
 }
@@ -33,6 +34,7 @@ const fallbackUsers: StoredUser[] = [
         label: "Farm House",
         line: "Plot 14, Bagalkot Road",
         city: "Vijayapura",
+        state: "Karnataka",
         pincode: "586101",
       },
     ],
@@ -50,6 +52,7 @@ const fallbackUsers: StoredUser[] = [
         label: "Office",
         line: "PHS Research Center, NH-52, Tidagundi",
         city: "Vijayapura",
+        state: "Karnataka",
         pincode: "586119",
       },
     ],
@@ -68,6 +71,7 @@ interface MongoUserLean {
     label: string;
     line: string;
     city: string;
+    state?: string;
     pincode: string;
   }>;
 }
@@ -130,22 +134,29 @@ export async function saveNewUser(user: {
 
     newUserObj.id = doc._id.toString();
 
-    // Also sync to customer model
-    try {
-      const existingCust = await CustomerModel.findOne({ email: cleanEmail });
-      if (!existingCust) {
-        await CustomerModel.create({
-          id: `c_${Date.now()}`,
-          name: newUserObj.name,
-          email: cleanEmail,
-          phone: newUserObj.phone,
-          city: "Karnataka",
-          orders: 0,
-          active: true,
-        });
+    // Also sync to customer model for all non-admin users
+    if (newUserObj.role !== "admin") {
+      try {
+        await CustomerModel.findOneAndUpdate(
+          { email: cleanEmail },
+          {
+            $set: {
+              name: newUserObj.name,
+              phone: newUserObj.phone || "",
+              active: true,
+            },
+            $setOnInsert: {
+              id: doc._id ? doc._id.toString() : `c_${Date.now()}`,
+              email: cleanEmail,
+              city: "Karnataka",
+              orders: 0,
+            },
+          },
+          { upsert: true, new: true }
+        );
+      } catch (custErr) {
+        console.warn("Customer sync error in saveNewUser:", custErr);
       }
-    } catch {
-      /* ignore customer sync error */
     }
   } catch (err) {
     console.warn("DB saveNewUser fallback to memory cache:", (err as Error).message);
@@ -167,7 +178,7 @@ export async function updateUserByEmail(
   update: {
     name?: string;
     phone?: string;
-    addresses?: Array<{ label: string; line: string; city: string; pincode: string }>;
+    addresses?: Array<{ label: string; line: string; city: string; state?: string; pincode: string }>;
   }
 ): Promise<StoredUser | null> {
   const cleanEmail = email.trim().toLowerCase();

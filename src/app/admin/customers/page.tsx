@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trash2, UserCheck, UserX, Plus, Pencil, Loader2, Users, AlertTriangle } from "lucide-react";
+import { Trash2, UserCheck, UserX, Plus, Pencil, Loader2, Users, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { inr, useApp } from "@/lib/store";
 import type { Customer } from "@/lib/data";
@@ -18,7 +18,7 @@ const blankCustomer: Customer = {
 };
 
 export default function AdminCustomersPage() {
-  const { state, saveCustomer, deleteCustomer, deleteAllCustomers } = useApp();
+  const { state, saveCustomer, deleteCustomer, deleteAllCustomers, refreshData } = useApp();
   const [q, setQ] = React.useState("");
   const [openModal, setOpenModal] = React.useState(false);
   const [editingCust, setEditingCust] = React.useState<Customer | null>(null);
@@ -28,6 +28,19 @@ export default function AdminCustomersPage() {
   const [saving, setSaving] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
   const [clearingAll, setClearingAll] = React.useState(false);
+  const [syncing, setSyncing] = React.useState(false);
+
+  // Auto-sync customers on page mount to ensure all registered live users are retrieved
+  React.useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  const handleSyncLive = async () => {
+    setSyncing(true);
+    await refreshData();
+    setSyncing(false);
+    toast.success("Live customer directory synchronized with MongoDB users & orders!");
+  };
 
   const list = state.customers.filter((c) =>
     [c.name, c.email, c.phone, c.city].join(" ").toLowerCase().includes(q.toLowerCase())
@@ -124,16 +137,25 @@ export default function AdminCustomersPage() {
   return (
     <AdminPage
       title="Customers & Farmers Directory"
-      subtitle={`${state.customers.length} registered farmers and dealers stored in MongoDB.`}
+      subtitle={`${state.customers.length} registered farmers and buyers in live database.`}
       action={
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSyncLive}
+            disabled={syncing}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground hover:bg-muted transition-all shadow-xs disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin text-primary" : ""}`} />
+            {syncing ? "Syncing..." : "Sync Live Users"}
+          </button>
           {state.customers.length > 0 && (
             <button
               type="button"
               onClick={() => setConfirmClearAll(true)}
               className="inline-flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-2 text-xs font-bold text-destructive hover:bg-destructive/20 transition-all shadow-sm"
             >
-              <Trash2 className="h-4 w-4" /> Delete All Customers
+              <Trash2 className="h-4 w-4" /> Delete All
             </button>
           )}
           <Btn onClick={openCreate}>

@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { inr, useApp, type Settings } from "@/lib/store";
 import type { Order } from "@/lib/data";
-import { numberToIndianWords, formatTaxInvoiceNo } from "@/lib/utils";
+import { numberToIndianWords, formatTaxInvoiceNo, getStateGstDisplay } from "@/lib/utils";
 
 interface TaxInvoiceProps {
   order: Order;
@@ -224,7 +224,7 @@ export function TaxInvoice({
 
                   <span className="text-zinc-500">Place of Supply:</span>
                   <span className="font-semibold text-zinc-900 text-right">
-                    Karnataka (29)
+                    {getStateGstDisplay(order.state)}
                   </span>
 
                   <span className="text-zinc-500">Reverse Charge:</span>
@@ -244,20 +244,23 @@ export function TaxInvoice({
           {/* Party Details (Bill To & Ship To) */}
           <div className="grid gap-6 border-b border-zinc-200 py-5 sm:grid-cols-2 text-xs">
             {/* Bill To */}
-            <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/50 p-4 space-y-1">
+            <div className="rounded-xl border border-zinc-200/80 bg-zinc-50/50 p-4 space-y-1.5">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
                 <MapPin className="h-3 w-3" /> Billed To (Buyer / Farmer)
               </span>
               <p className="text-sm font-bold text-zinc-900">{order.customer}</p>
-              <p className="text-zinc-600">
-                <span className="font-semibold text-zinc-700">Phone:</span> {order.phone}
-              </p>
-              <p className="text-zinc-600">
-                <span className="font-semibold text-zinc-700">Email:</span> {order.email}
-              </p>
-              <p className="text-zinc-700 font-medium pt-1 leading-relaxed">
-                {order.address}
-              </p>
+              <div className="space-y-0.5 text-zinc-600 text-[11px]">
+                <p>
+                  <span className="font-semibold text-zinc-700">Mobile No:</span> {order.phone}
+                </p>
+                <p>
+                  <span className="font-semibold text-zinc-700">Email:</span> {order.email}
+                </p>
+                <p className="text-zinc-700 font-medium pt-1 leading-relaxed">
+                  <span className="font-semibold text-zinc-700">Delivery Address:</span><br />
+                  {order.address}
+                </p>
+              </div>
             </div>
 
             {/* Shipped To & Payment Info */}
@@ -351,46 +354,26 @@ export function TaxInvoice({
 
           {/* Calculations, Amount in Words, and Financial Breakup */}
           <div className="grid gap-6 border-b border-zinc-200 pb-6 md:grid-cols-12 text-xs">
-            {/* Amount in words & Bank Info */}
-            <div className="md:col-span-7 space-y-4">
+            {/* Amount in words & Certification Info */}
+            <div className="md:col-span-7 space-y-3.5">
               {/* Words Box */}
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3.5">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                   Total Amount (in words):
                 </span>
-                <p className="mt-1 font-semibold text-zinc-900 italic leading-relaxed">
+                <p className="mt-1 text-sm font-semibold text-zinc-900 italic leading-relaxed">
                   {wordsAmount}
                 </p>
               </div>
 
-              {/* Bank Account Details */}
-              <div className="rounded-xl border border-dashed border-zinc-300 p-3.5 space-y-1 text-[11px] text-zinc-600 bg-white">
-                <p className="font-bold text-zinc-900 text-xs flex items-center gap-1.5">
-                  <Building2 className="h-3.5 w-3.5 text-emerald-700" /> Company Bank Account Details for NEFT/RTGS:
+              {/* Digital Authentication & Tax Compliance Notice */}
+              <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-4 space-y-1 text-[11px] text-zinc-600">
+                <p className="font-bold text-emerald-950 text-xs flex items-center gap-1.5">
+                  <BadgeCheck className="h-4 w-4 text-emerald-700" /> Digital Payment Verification &amp; Tax Compliance:
                 </p>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pt-1">
-                  <p>
-                    <span className="text-zinc-500">Account Name:</span> {companyName}
-                  </p>
-                  <p>
-                    <span className="text-zinc-500">Bank Name:</span> State Bank of India
-                  </p>
-                  <p>
-                    <span className="text-zinc-500">A/C Number:</span>{" "}
-                    <span className="font-mono font-semibold text-zinc-800">
-                      40928172901
-                    </span>
-                  </p>
-                  <p>
-                    <span className="text-zinc-500">IFSC Code:</span>{" "}
-                    <span className="font-mono font-semibold text-zinc-800">
-                      SBIN0007214
-                    </span>
-                  </p>
-                  <p className="col-span-2">
-                    <span className="text-zinc-500">Branch:</span> Tidagundi Agriculture Center, Vijayapura
-                  </p>
-                </div>
+                <p className="text-zinc-600 leading-relaxed pt-0.5">
+                  This transaction has been processed securely via digital payment gateway. Tax is charged under GST HSN Code 31010099 (Organic Bio-fertilizers &amp; Bio-inoculants) as per Government of India agricultural statutory rates.
+                </p>
               </div>
             </div>
 
