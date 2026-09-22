@@ -88,7 +88,7 @@ export default function GalleryPage() {
   return (
     <div className="min-h-screen bg-[#fbf8f1] pb-24 text-[#1a3820]">
       {/* Hero Banner */}
-      <section className="relative overflow-hidden bg-[#18361e] py-16 sm:py-20 text-[#f4efe4]">
+      <section className="relative overflow-hidden bg-[#18361e] py-14 sm:py-16 text-[#f4efe4]">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#a8d672_1px,transparent_1px)] [background-size:20px_20px]" />
         
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
@@ -124,9 +124,9 @@ export default function GalleryPage() {
       </section>
 
       {/* Main Content Area */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-6">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10">
         {/* Filter and Search Container */}
-        <div className="rounded-3xl border border-[#e4dbca] bg-white p-4 sm:p-6 shadow-lg">
+        <div className="rounded-3xl border border-[#e4dbca] bg-white p-4 sm:p-6 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             {/* Type Tabs: All / Photos / Videos */}
             <div className="flex rounded-2xl bg-[#f4efe4] p-1.5 border border-[#e4dbca] self-start sm:self-auto">
