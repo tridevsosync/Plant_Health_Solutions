@@ -85,7 +85,7 @@ export default function ContactPage() {
       </section>
 
       {/* Quick Contact Info Cards */}
-      <section className="mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 sm:pt-14 pb-4 lg:px-8">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Card 1: Phone */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md">

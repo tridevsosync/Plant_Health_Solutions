@@ -122,7 +122,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#122b17]/95 via-[#183a1f]/90 to-[#285724]/80 opacity-90" />
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-36 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 sm:pt-10 sm:pb-20 md:pt-12 md:pb-28 lg:px-8">
           <div className="max-w-3xl text-white">
             <span className="inline-flex items-center gap-2 rounded-full bg-accent/20 px-3.5 py-1.5 text-xs font-medium uppercase tracking-wider text-accent ring-1 ring-accent/30 backdrop-blur-xs">
               <Sprout className="h-3.5 w-3.5" /> Trusted by 50,000+ Indian farmers

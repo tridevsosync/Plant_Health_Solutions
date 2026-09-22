@@ -152,7 +152,7 @@ export function Header() {
 
       {/* Main Navbar */}
       <div className="bg-[#fbf8f1] border-b border-[#e9e2d3]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 gap-2 sm:gap-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5 gap-2 sm:gap-4">
           {/* Left: Mobile Hamburger & Brand Logo */}
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             {/* Mobile Menu Hamburger Toggle */}
@@ -167,9 +167,9 @@ export function Header() {
             {/* Logo & Brand Name */}
             <Link
               href="/"
-              className="flex items-center gap-2.5 sm:gap-3.5 group select-none min-w-0"
+              className="flex items-center gap-2 sm:gap-3 group select-none min-w-0"
             >
-              <div className="flex h-12 w-12 xs:h-14 xs:w-14 sm:h-16 sm:w-16 lg:h-[68px] lg:w-[68px] shrink-0 items-center justify-center rounded-2xl bg-white p-1 sm:p-1.5 shadow-xs border border-[#e2dac6] overflow-hidden">
+              <div className="flex h-10 w-10 sm:h-11 sm:w-11 lg:h-[48px] lg:w-[48px] shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-xs border border-[#e2dac6] overflow-hidden">
                 <img
                   src="/logo.png"
                   alt="Plant Health Solutions"
@@ -177,10 +177,10 @@ export function Header() {
                 />
               </div>
               <div className="flex flex-col justify-center leading-tight min-w-0">
-                <span className="font-display text-base xs:text-lg sm:text-xl md:text-2xl lg:text-[25px] font-extrabold tracking-tight text-[#1a3820] truncate">
+                <span className="font-display text-sm sm:text-base md:text-lg lg:text-xl font-extrabold tracking-tight text-[#1a3820] truncate">
                   Plant Health <span className="text-[#4e8837]">Solutions</span>
                 </span>
-                <span className="text-[10px] xs:text-[11px] sm:text-xs md:text-[13px] font-semibold text-[#486343] tracking-tight truncate">
+                <span className="text-[10px] sm:text-[11px] md:text-xs font-semibold text-[#486343] tracking-tight truncate">
                   Agricultural Research &amp; Bio Inputs
                 </span>
               </div>
