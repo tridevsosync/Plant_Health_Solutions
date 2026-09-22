@@ -114,7 +114,7 @@ export default function AboutPage() {
           <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
             Founder &amp; Co-Founder
           </h2>
-          <p className="max-w-3xl text-sm sm:text-base text-muted-foreground leading-relaxed">
+          <p className="max-w-3xl text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
             Leading the transformation of sustainable Indian agriculture through scientific innovation,
             grassroots farmer empowerment, and entrepreneurial vision.
           </p>
@@ -148,9 +148,9 @@ export default function AboutPage() {
                       <Sparkles className="h-3.5 w-3.5" /> Goldman Sachs 10,000 Women
                     </span>
                   </div>
-                  <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground text-left">
+                  <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
                     <p className="font-semibold text-foreground">University of Horticultural Sciences, Bagalkot</p>
-                    <p className="text-[11px] mt-0.5">Crop Improvement &amp; Sustainable Soil Biology</p>
+                    <p className="text-[11px] mt-0.5 text-gray-600 dark:text-gray-400">Crop Improvement &amp; Sustainable Soil Biology</p>
                   </div>
                 </div>
               </div>
@@ -165,12 +165,12 @@ export default function AboutPage() {
                     <h3 className="font-display text-2xl sm:text-3xl font-bold text-foreground mt-1">
                       Dr. Rashmi Mallikarjun Hegde
                     </h3>
-                    <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mt-1">
                       Agricultural Biotechnology Scientist, Entrepreneur &amp; Sustainability Advocate
                     </p>
                   </div>
 
-                  <div className="mt-5 space-y-3.5 text-xs sm:text-sm text-muted-foreground leading-relaxed text-justify sm:text-left">
+                  <div className="mt-5 space-y-3.5 text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed text-justify sm:text-left">
                     <p>
                       Dr. Rashmi Mallikarjun Hegde is an agricultural biotechnology scientist, entrepreneur and
                       sustainability advocate with a Ph.D. in Agricultural Biotechnology and Crop Improvement from the
@@ -200,7 +200,7 @@ export default function AboutPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                <div className="mt-6 pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-700 dark:text-gray-300">
                   <div className="flex items-center gap-2">
                     <Microscope className="h-4 w-4 text-primary" />
                     <span className="font-semibold text-foreground">Core Focus:</span> Microbial Formulation &amp; Crop Protection
@@ -240,9 +240,9 @@ export default function AboutPage() {
                       <CheckCircle2 className="h-3.5 w-3.5" /> Agriculture &amp; MBA
                     </span>
                   </div>
-                  <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground text-left">
+                  <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
                     <p className="font-semibold text-foreground">Grassroots Farmer Engagement</p>
-                    <p className="text-[11px] mt-0.5">Market Development &amp; Strategic Partnerships</p>
+                    <p className="text-[11px] mt-0.5 text-gray-600 dark:text-gray-400">Market Development &amp; Strategic Partnerships</p>
                   </div>
                 </div>
               </div>
@@ -257,12 +257,12 @@ export default function AboutPage() {
                     <h3 className="font-display text-2xl sm:text-3xl font-bold text-foreground mt-1">
                       Mr. Prashant Dhondiram Teli
                     </h3>
-                    <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mt-1">
                       Agricultural Entrepreneur, Corporate Strategist &amp; Agribusiness Leader
                     </p>
                   </div>
 
-                  <div className="mt-5 space-y-3.5 text-xs sm:text-sm text-muted-foreground leading-relaxed text-justify sm:text-left">
+                  <div className="mt-5 space-y-3.5 text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed text-justify sm:text-left">
                     <p>
                       Mr. Prashant Dhondiram Teli is an agricultural entrepreneur and the Co-Founder and Chief Executive
                       Officer of Plant Health Solutions Pvt. Ltd. With a background in Agriculture and an MBA, he brings
@@ -300,7 +300,7 @@ export default function AboutPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                <div className="mt-6 pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-700 dark:text-gray-300">
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4 text-secondary" />
                     <span className="font-semibold text-foreground">Core Focus:</span> Strategy, Market Access &amp; Farmer Connectivity
