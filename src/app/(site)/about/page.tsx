@@ -97,147 +97,206 @@ export default function AboutPage() {
         </section>
       </div>
 
-      {/* Manufacturing & Research Facilities */}
+      {/* Meet Our Team (Placed right under Mission & Vision) */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
         <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
           <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
-            Manufacturing &amp; Research
+            Leadership &amp; Experts
           </span>
           <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
-            State-of-the-art facilities
+            Meet our team
           </h2>
+          <p className="max-w-2xl text-sm sm:text-base text-muted-foreground">
+            Led by senior agronomists, biochemists, and farm operation specialists dedicated to advancing sustainable agriculture.
+          </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Facility 1 */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <img
-              alt="Manufacturing Facility"
-              loading="lazy"
-              className="aspect-[4/3] w-full object-cover"
-              src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=1200&q=80"
-            />
-            <div className="p-6">
-              <h3 className="font-display text-xl font-bold text-primary">
-                Manufacturing Facility
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Member 1 */}
+          <div className="group overflow-hidden rounded-3xl border border-border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="relative aspect-[4/4.5] w-full overflow-hidden bg-muted">
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80"
+                alt="Dr. R. M. Kulkarni"
+                className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+            </div>
+            <div className="p-5">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+                Founder
+              </span>
+              <h3 className="mt-2 font-display text-lg font-bold text-foreground">
+                Dr. R. M. Kulkarni
               </h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                ISO 9001:2015 certified plant with dedicated lines for liquid, granular and
-                seed-treatment formulations. Annual capacity 12,000 MT.
+              <p className="text-xs font-semibold text-muted-foreground">
+                Chief Agronomist
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground/90 leading-relaxed line-clamp-2">
+                Ph.D. in Soil Microbiology with over 25 years of field research in crop nutrition.
               </p>
             </div>
           </div>
 
-          {/* Facility 2 */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <img
-              alt="Research Center"
-              loading="lazy"
-              className="aspect-[4/3] w-full object-cover"
-              src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80"
-            />
-            <div className="p-6">
-              <h3 className="font-display text-xl font-bold text-primary">Research Center</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Soil &amp; water laboratory, tissue-culture unit, fermentation chambers and 40 acres
-                of multi-crop trial plots.
+          {/* Member 2 */}
+          <div className="group overflow-hidden rounded-3xl border border-border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="relative aspect-[4/4.5] w-full overflow-hidden bg-muted">
+              <img
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80"
+                alt="Mrs. S. Patil"
+                className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+            </div>
+            <div className="p-5">
+              <span className="rounded-md bg-secondary/10 px-2 py-0.5 text-[11px] font-bold text-secondary">
+                Executive
+              </span>
+              <h3 className="mt-2 font-display text-lg font-bold text-foreground">
+                Mrs. S. Patil
+              </h3>
+              <p className="text-xs font-semibold text-muted-foreground">
+                Managing Director
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground/90 leading-relaxed line-clamp-2">
+                Spearheading nationwide supply chain, dealer relationships, and company growth.
+              </p>
+            </div>
+          </div>
+
+          {/* Member 3 */}
+          <div className="group overflow-hidden rounded-3xl border border-border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="relative aspect-[4/4.5] w-full overflow-hidden bg-muted">
+              <img
+                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80"
+                alt="Dr. M. Hegde"
+                className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+            </div>
+            <div className="p-5">
+              <span className="rounded-md bg-accent/20 px-2 py-0.5 text-[11px] font-bold text-primary">
+                R&amp;D
+              </span>
+              <h3 className="mt-2 font-display text-lg font-bold text-foreground">
+                Dr. M. Hegde
+              </h3>
+              <p className="text-xs font-semibold text-muted-foreground">
+                Head of Plant Research
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground/90 leading-relaxed line-clamp-2">
+                Specialist in microbial formulation, strain development, and biological crop protection.
+              </p>
+            </div>
+          </div>
+
+          {/* Member 4 */}
+          <div className="group overflow-hidden rounded-3xl border border-border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="relative aspect-[4/4.5] w-full overflow-hidden bg-muted">
+              <img
+                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80"
+                alt="Mr. A. Deshmukh"
+                className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+            </div>
+            <div className="p-5">
+              <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                Operations
+              </span>
+              <h3 className="mt-2 font-display text-lg font-bold text-foreground">
+                Mr. A. Deshmukh
+              </h3>
+              <p className="text-xs font-semibold text-muted-foreground">
+                VP Operations &amp; QC
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground/90 leading-relaxed line-clamp-2">
+                Overseeing automated packaging, quality inspection, and ISO compliance across facilities.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Certifications */}
+      {/* Manufacturing & Research Facilities */}
       <div className="bg-muted/40 border-y border-border/60">
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
           <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
             <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
-              Certifications
+              Manufacturing &amp; Research
             </span>
             <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
-              Trusted, audited, certified
+              State-of-the-art facilities
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
-              <Award className="mx-auto h-8 w-8 text-secondary" />
-              <div className="mt-3 text-sm font-semibold text-foreground">ISO 9001:2015</div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Facility 1 */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <img
+                alt="Manufacturing Facility"
+                loading="lazy"
+                className="aspect-[4/3] w-full object-cover"
+                src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=1200&q=80"
+              />
+              <div className="p-6">
+                <h3 className="font-display text-xl font-bold text-primary">
+                  Manufacturing Facility
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  ISO 9001:2015 certified plant with dedicated lines for liquid, granular and
+                  seed-treatment formulations. Annual capacity 12,000 MT.
+                </p>
+              </div>
             </div>
-            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
-              <Award className="mx-auto h-8 w-8 text-secondary" />
-              <div className="mt-3 text-sm font-semibold text-foreground">CIB&amp;RC Registered</div>
-            </div>
-            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
-              <Award className="mx-auto h-8 w-8 text-secondary" />
-              <div className="mt-3 text-sm font-semibold text-foreground">FCO Licensed</div>
-            </div>
-            <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
-              <Award className="mx-auto h-8 w-8 text-secondary" />
-              <div className="mt-3 text-sm font-semibold text-foreground">NPOP Organic</div>
+
+            {/* Facility 2 */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <img
+                alt="Research Center"
+                loading="lazy"
+                className="aspect-[4/3] w-full object-cover"
+                src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80"
+              />
+              <div className="p-6">
+                <h3 className="font-display text-xl font-bold text-primary">Research Center</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  Soil &amp; water laboratory, tissue-culture unit, fermentation chambers and 40 acres
+                  of multi-crop trial plots.
+                </p>
+              </div>
             </div>
           </div>
         </section>
       </div>
 
-      {/* Leadership / Team */}
+      {/* Certifications */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
         <div className="mb-10 flex flex-col items-start gap-3 md:mb-14">
           <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
-            Leadership
+            Certifications
           </span>
           <h2 className="max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
-            Meet our team
+            Trusted, audited, certified
           </h2>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-4">
-          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
-              <Users className="h-8 w-8" />
-            </div>
-            <div className="mt-4 font-display text-lg font-bold text-primary">
-              Dr. R. M. Kulkarni
-            </div>
-            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
-              Founder &amp; Chief Agronomist
-            </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+            <Award className="mx-auto h-8 w-8 text-secondary" />
+            <div className="mt-3 text-sm font-semibold text-foreground">ISO 9001:2015</div>
           </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
-              <Users className="h-8 w-8" />
-            </div>
-            <div className="mt-4 font-display text-lg font-bold text-primary">
-              Mrs. S. Patil
-            </div>
-            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
-              Managing Director
-            </div>
+          <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+            <Award className="mx-auto h-8 w-8 text-secondary" />
+            <div className="mt-3 text-sm font-semibold text-foreground">CIB&amp;RC Registered</div>
           </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
-              <Users className="h-8 w-8" />
-            </div>
-            <div className="mt-4 font-display text-lg font-bold text-primary">
-              Dr. M. Hegde
-            </div>
-            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
-              Head of Research
-            </div>
+          <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+            <Award className="mx-auto h-8 w-8 text-secondary" />
+            <div className="mt-3 text-sm font-semibold text-foreground">FCO Licensed</div>
           </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-xs">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-accent text-accent-foreground">
-              <Users className="h-8 w-8" />
-            </div>
-            <div className="mt-4 font-display text-lg font-bold text-primary">
-              Mr. A. Deshmukh
-            </div>
-            <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
-              VP Operations
-            </div>
+          <div className="rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+            <Award className="mx-auto h-8 w-8 text-secondary" />
+            <div className="mt-3 text-sm font-semibold text-foreground">NPOP Organic</div>
           </div>
         </div>
       </section>
