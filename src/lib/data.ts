@@ -442,47 +442,6 @@ export const coupons: Coupon[] = [
 
 export const galleryItems: GalleryItem[] = [];
 
-export const teamMembers: TeamMember[] = [
-  {
-    id: "team_1",
-    name: "Dr. R. M. Kulkarni",
-    role: "Chief Agronomist",
-    department: "Founder",
-    bio: "Ph.D. in Soil Microbiology with over 25 years of field research in crop nutrition.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
-    order: 1,
-    status: "Active",
-  },
-  {
-    id: "team_2",
-    name: "Mrs. S. Patil",
-    role: "Managing Director",
-    department: "Executive",
-    bio: "Spearheading nationwide supply chain, dealer relationships, and company growth.",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
-    order: 2,
-    status: "Active",
-  },
-  {
-    id: "team_3",
-    name: "Dr. M. Hegde",
-    role: "Head of Plant Research",
-    department: "R&D",
-    bio: "Specialist in microbial formulation, strain development, and biological crop protection.",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80",
-    order: 3,
-    status: "Active",
-  },
-  {
-    id: "team_4",
-    name: "Mr. A. Deshmukh",
-    role: "VP Operations & QC",
-    department: "Operations",
-    bio: "Overseeing automated packaging, quality inspection, and ISO compliance across facilities.",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80",
-    order: 4,
-    status: "Active",
-  },
-];
+export const teamMembers: TeamMember[] = [];
 
 
