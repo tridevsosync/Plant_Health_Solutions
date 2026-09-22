@@ -22,19 +22,34 @@ import {
   FileText,
   Info,
   ChevronRight,
+  ChevronDown,
   Sparkles,
+  Images,
 } from "lucide-react";
 import { useApp, useCartTotals, useUser } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-const links = [
+const mainNavLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/about", label: "About", icon: Info },
   { href: "/products", label: "Products", icon: Package },
   { href: "/categories", label: "Categories", icon: Boxes },
   { href: "/farmer-solutions", label: "Farmer Solutions", icon: Sprout },
-  { href: "/blog", label: "Blog", icon: FileText },
-  { href: "/contact", label: "Contact", icon: Phone },
+] as const;
+
+const mediaNavLinks = [
+  {
+    href: "/blog",
+    label: "Blog & Guides",
+    sub: "Research updates, agronomy advice & farming guides",
+    icon: FileText,
+  },
+  {
+    href: "/gallery",
+    label: "Photo & Video Gallery",
+    sub: "Field trials, manufacturing tour & product videos",
+    icon: Images,
+  },
 ] as const;
 
 export function Header() {
@@ -48,14 +63,18 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [userMenuOpen, setUserMenuOpen] = React.useState(false);
+  const [mediaDropdownOpen, setMediaDropdownOpen] = React.useState(false);
+  const [mobileMediaOpen, setMobileMediaOpen] = React.useState(true);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const userMenuRef = React.useRef<HTMLDivElement>(null);
+  const mediaMenuRef = React.useRef<HTMLDivElement>(null);
 
   // Close menus on route change
   React.useEffect(() => {
     setMobileMenuOpen(false);
     setSearchOpen(false);
     setUserMenuOpen(false);
+    setMediaDropdownOpen(false);
   }, [pathname]);
 
   // Lock body scroll when mobile menu is open
@@ -70,11 +89,14 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
-  // Close user menu on outside click
+  // Close user menu and media dropdown on outside click
   React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
+      }
+      if (mediaMenuRef.current && !mediaMenuRef.current.contains(e.target as Node)) {
+        setMediaDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -145,27 +167,29 @@ export function Header() {
             {/* Logo & Brand Name */}
             <Link
               href="/"
-              className="flex items-center gap-2 sm:gap-3 group select-none min-w-0"
+              className="flex items-center gap-2.5 sm:gap-3.5 group select-none min-w-0"
             >
-              <div className="flex h-10 w-10 sm:h-12 sm:w-12 lg:h-13 lg:w-13 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-xs border border-[#e5decb] overflow-hidden">
+              <div className="flex h-12 w-12 xs:h-14 xs:w-14 sm:h-16 sm:w-16 lg:h-[68px] lg:w-[68px] shrink-0 items-center justify-center rounded-2xl bg-white p-1 sm:p-1.5 shadow-xs border border-[#e2dac6] overflow-hidden">
                 <img
                   src="/logo.png"
                   alt="Plant Health Solutions"
                   className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
-              <div className="flex flex-col leading-tight min-w-0">
-                <span className="font-display text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-[#1a3820] truncate">
+              <div className="flex flex-col justify-center leading-tight min-w-0">
+                <span className="font-display text-base xs:text-lg sm:text-xl md:text-2xl lg:text-[25px] font-extrabold tracking-tight text-[#1a3820] truncate">
                   Plant Health <span className="text-[#4e8837]">Solutions</span>
                 </span>
-                <span className="text-[10px] text-[#5c6b59] hidden md:block truncate">Agricultural Research &amp; Bio Inputs</span>
+                <span className="text-[10px] xs:text-[11px] sm:text-xs md:text-[13px] font-semibold text-[#486343] tracking-tight truncate">
+                  Agricultural Research &amp; Bio Inputs
+                </span>
               </div>
             </Link>
           </div>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-4 xl:gap-6 shrink-0">
-            {links.map((link) => {
+            {mainNavLinks.map((link) => {
               const isActive =
                 link.href === "/"
                   ? pathname === "/"
@@ -186,6 +210,99 @@ export function Header() {
                 </Link>
               );
             })}
+
+            {/* Media Dropdown (Blog + Gallery) */}
+            <div
+              ref={mediaMenuRef}
+              className="relative"
+              onMouseEnter={() => setMediaDropdownOpen(true)}
+              onMouseLeave={() => setMediaDropdownOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setMediaDropdownOpen((prev) => !prev)}
+                aria-expanded={mediaDropdownOpen}
+                className={cn(
+                  "flex items-center gap-1 text-[13px] xl:text-[14px] font-semibold transition-colors duration-200 py-1 border-b-2 whitespace-nowrap cursor-pointer",
+                  pathname.startsWith("/blog") || pathname.startsWith("/gallery")
+                    ? "text-[#4e8837] border-[#4e8837]"
+                    : "text-[#283928] border-transparent hover:text-[#4e8837]"
+                )}
+              >
+                <span>Media</span>
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform duration-200",
+                    mediaDropdownOpen && "rotate-180"
+                  )}
+                />
+              </button>
+
+              {/* Dropdown Menu Popup */}
+              {mediaDropdownOpen && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 w-72 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="rounded-2xl border border-[#e5decb] bg-white p-2 shadow-xl ring-1 ring-black/5">
+                    {mediaNavLinks.map((item) => {
+                      const isItemActive =
+                        pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMediaDropdownOpen(false)}
+                          className={cn(
+                            "flex items-start gap-3 rounded-xl p-2.5 transition-colors group",
+                            isItemActive
+                              ? "bg-[#4e8837]/10"
+                              : "hover:bg-[#fbf8f1]"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors",
+                              isItemActive
+                                ? "bg-[#4e8837] text-white"
+                                : "bg-[#f4efe4] text-[#4e8837] group-hover:bg-[#4e8837] group-hover:text-white"
+                            )}
+                          >
+                            <item.icon className="h-4.5 w-4.5" />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span
+                              className={cn(
+                                "text-xs font-bold leading-tight",
+                                isItemActive
+                                  ? "text-[#4e8837]"
+                                  : "text-[#1a3820] group-hover:text-[#4e8837]"
+                              )}
+                            >
+                              {item.label}
+                            </span>
+                            <span className="text-[11px] text-[#5c6b59] leading-tight mt-0.5 line-clamp-1">
+                              {item.sub}
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Contact Navigation Link */}
+            <Link
+              href="/contact"
+              className={cn(
+                "text-[13px] xl:text-[14px] font-semibold transition-colors duration-200 py-1 border-b-2 whitespace-nowrap",
+                pathname === "/contact" || pathname.startsWith("/contact/")
+                  ? "text-[#4e8837] border-[#4e8837]"
+                  : "text-[#283928] border-transparent hover:text-[#4e8837]"
+              )}
+            >
+              Contact
+            </Link>
           </nav>
 
           {/* Right Action Icons */}
@@ -427,12 +544,12 @@ export function Header() {
             {/* Drawer Header */}
             <div className="flex items-center justify-between border-b border-[#e9e2d3] bg-[#18361e] p-4 text-[#f4efe4]">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-xs overflow-hidden">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white p-1.5 shadow-sm overflow-hidden">
                   <img src="/logo.png" alt="Plant Health Solutions" className="h-full w-full object-contain" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-display text-base font-bold text-white leading-tight truncate">Plant Health Solutions</p>
-                  <p className="text-[10px] text-[#a8d672]">Vijayapura Center</p>
+                  <p className="font-display text-lg font-bold text-white leading-tight truncate">Plant Health Solutions</p>
+                  <p className="text-xs text-[#a8d672] font-medium mt-0.5">Vijayapura Center</p>
                 </div>
               </div>
               <button
@@ -465,7 +582,8 @@ export function Header() {
                 Navigation
               </div>
 
-              {links.map((link) => {
+              {/* Main Nav Links */}
+              {mainNavLinks.map((link) => {
                 const isActive =
                   link.href === "/"
                     ? pathname === "/"
@@ -491,6 +609,84 @@ export function Header() {
                   </Link>
                 );
               })}
+
+              {/* Media Submenu Section */}
+              <div className="rounded-2xl border border-[#e4dbca] bg-white/70 p-1.5 my-1.5 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => setMobileMediaOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs font-extrabold uppercase tracking-wider text-[#1a3820]"
+                >
+                  <span className="flex items-center gap-2">
+                    <Images className="h-4 w-4 text-[#4e8837]" />
+                    <span>Media &amp; Resources</span>
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 text-[#5c6b59] transition-transform duration-200",
+                      mobileMediaOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                {mobileMediaOpen && (
+                  <div className="space-y-1 pl-1 pt-0.5">
+                    {mediaNavLinks.map((item) => {
+                      const isItemActive =
+                        pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            "flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold transition-all",
+                            isItemActive
+                              ? "bg-[#4e8837] text-white font-bold"
+                              : "text-[#283928] hover:bg-black/5 hover:text-[#4e8837]"
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <item.icon
+                              className={cn("h-4 w-4", isItemActive ? "text-white" : "text-[#4e8837]")}
+                            />
+                            <span>{item.label}</span>
+                          </div>
+                          <ChevronRight
+                            className={cn("h-3.5 w-3.5 opacity-50", isItemActive && "opacity-100")}
+                          />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Contact Link */}
+              <Link
+                href="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all",
+                  pathname === "/contact" || pathname.startsWith("/contact/")
+                    ? "bg-[#4e8837] text-white shadow-xs font-bold"
+                    : "text-[#283928] hover:bg-black/5 hover:text-[#4e8837]"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Phone
+                    className={cn(
+                      "h-4 w-4",
+                      pathname === "/contact" ? "text-white" : "text-[#4e8837]"
+                    )}
+                  />
+                  <span>Contact</span>
+                </div>
+                <ChevronRight
+                  className={cn("h-4 w-4 opacity-50", pathname === "/contact" && "opacity-100")}
+                />
+              </Link>
 
               {/* Mobile Wishlist Link */}
               <Link

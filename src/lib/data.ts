@@ -42,6 +42,21 @@ export type Blog = {
   body: string[];
 };
 
+export type GalleryItem = {
+  id: string;
+  title: string;
+  description?: string;
+  type: "photo" | "video";
+  mediaUrl?: string;
+  thumbnailUrl?: string;
+  videoLink?: string;
+  category?: string;
+  featured?: boolean;
+  status?: "Active" | "Draft";
+  order?: number;
+  date?: string;
+};
+
 export type Testimonial = {
   id: string;
   name: string;
@@ -1150,3 +1165,6 @@ export const coupons: Coupon[] = [
     description: "15% off on bio-fertilizer and micro-nutrient kits",
   },
 ];
+
+export const galleryItems: GalleryItem[] = [];
+

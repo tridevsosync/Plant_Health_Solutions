@@ -8,6 +8,7 @@ import {
   coupons as seedCoupons,
   customers as seedCustomers,
   enquiries as seedEnquiries,
+  galleryItems as seedGallery,
   orders as seedOrders,
   products as seedProducts,
   reviews as seedReviews,
@@ -17,6 +18,7 @@ import {
   type Coupon,
   type Customer,
   type Enquiry,
+  type GalleryItem,
   type Order,
   type Product,
   type Review,
@@ -83,6 +85,7 @@ export type State = {
   products: Product[];
   categories: Category[];
   blogs: Blog[];
+  gallery: GalleryItem[];
   testimonials: Testimonial[];
   customers: Customer[];
   orders: Order[];
@@ -102,6 +105,7 @@ const initialState: State = {
   products: seedProducts,
   categories: seedCategories,
   blogs: seedBlogs,
+  gallery: seedGallery,
   testimonials: seedTestimonials,
   customers: [],
   orders: seedOrders,
@@ -198,6 +202,10 @@ type Ctx = {
   // Blog CRUD
   saveBlog: (b: Blog, isNew: boolean) => Promise<boolean>;
   deleteBlog: (id: string) => Promise<boolean>;
+  // Gallery CRUD
+  saveGalleryItem: (item: GalleryItem, isNew: boolean) => Promise<boolean>;
+  deleteGalleryItem: (id: string) => Promise<boolean>;
+  deleteAllGalleryItems: () => Promise<boolean>;
   // Coupon CRUD
   saveCoupon: (coupon: Coupon, isNew: boolean) => Promise<boolean>;
   deleteCoupon: (code: string) => Promise<boolean>;
@@ -244,6 +252,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         prodRes,
         catRes,
         blogRes,
+        gallRes,
         orderRes,
         testRes,
         enqRes,
@@ -255,6 +264,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/products").then((r) => r.json()),
         fetch("/api/categories").then((r) => r.json()),
         fetch("/api/blogs").then((r) => r.json()),
+        fetch("/api/gallery").then((r) => r.json()),
         fetch("/api/orders").then((r) => r.json()),
         fetch("/api/testimonials?all=true").then((r) => r.json()),
         fetch("/api/enquiries").then((r) => r.json()),
@@ -276,6 +286,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         if (blogRes.status === "fulfilled" && blogRes.value?.success && Array.isArray(blogRes.value.blogs)) {
           next.blogs = blogRes.value.blogs;
+        }
+        if (gallRes.status === "fulfilled" && gallRes.value?.success && Array.isArray(gallRes.value.items)) {
+          next.gallery = gallRes.value.items;
         }
         if (orderRes.status === "fulfilled" && orderRes.value?.success && Array.isArray(orderRes.value.orders)) {
           next.orders = orderRes.value.orders;
@@ -317,6 +330,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ...parsed,
           products: parsed.products && parsed.products.length > 0 ? parsed.products : s.products,
           categories: parsed.categories && parsed.categories.length > 0 ? parsed.categories : s.categories,
+          blogs: parsed.blogs && parsed.blogs.length > 0 ? parsed.blogs : s.blogs,
+          gallery: parsed.gallery && parsed.gallery.length > 0 ? parsed.gallery : s.gallery && s.gallery.length > 0 ? s.gallery : seedGallery,
         }));
 
         if (parsed.currentUser) {
@@ -780,6 +795,59 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.error("Delete blog error:", e);
     }
     set((s) => ({ ...s, blogs: s.blogs.filter((b) => b.id !== id) }));
+    return true;
+  };
+
+  const saveGalleryItem = async (item: GalleryItem, isNew: boolean) => {
+    try {
+      const url = isNew ? "/api/gallery" : `/api/gallery/${encodeURIComponent(item.id)}`;
+      const method = isNew ? "POST" : "PUT";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const savedItem = data.item || item;
+        set((s) => ({
+          ...s,
+          gallery: isNew
+            ? [savedItem, ...s.gallery]
+            : s.gallery.map((g) => (g.id === savedItem.id ? savedItem : g)),
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.error("Save gallery item error:", e);
+    }
+    const fallbackItem = { ...item, id: item.id || `g_${Date.now()}` };
+    set((s) => ({
+      ...s,
+      gallery: isNew
+        ? [fallbackItem, ...s.gallery]
+        : s.gallery.map((g) => (g.id === item.id ? item : g)),
+    }));
+    return true;
+  };
+
+  const deleteGalleryItem = async (id: string) => {
+    try {
+      await fetch(`/api/gallery/${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete gallery item error:", e);
+    }
+    set((s) => ({ ...s, gallery: s.gallery.filter((g) => g.id !== id) }));
+    return true;
+  };
+
+  const deleteAllGalleryItems = async () => {
+    try {
+      await fetch("/api/gallery", { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete all gallery items error:", e);
+    }
+    set((s) => ({ ...s, gallery: [] }));
     return true;
   };
 
@@ -1395,6 +1463,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteOrder,
     saveBlog,
     deleteBlog,
+    saveGalleryItem,
+    deleteGalleryItem,
+    deleteAllGalleryItems,
     saveCoupon,
     deleteCoupon,
     deleteAllCoupons,

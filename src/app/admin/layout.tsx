@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Boxes,
   FileText,
+  Film,
+  Images,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -26,6 +28,7 @@ const nav = [
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart, exact: false },
   { href: "/admin/customers", label: "Customers", icon: Users, exact: false },
   { href: "/admin/blogs", label: "Blogs", icon: FileText, exact: false },
+  { href: "/admin/gallery", label: "Gallery", icon: Images, exact: false },
   { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote, exact: false },
   { href: "/admin/enquiries", label: "Enquiries", icon: Mail, exact: false },
   { href: "/admin/settings", label: "Settings", icon: Settings, exact: false },

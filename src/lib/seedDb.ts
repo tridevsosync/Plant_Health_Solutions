@@ -4,6 +4,7 @@ import { ProductModel } from "@/models/Product";
 import { CategoryModel } from "@/models/Category";
 import { OrderModel } from "@/models/Order";
 import { BlogModel } from "@/models/Blog";
+import { GalleryModel } from "@/models/Gallery";
 import { CouponModel } from "@/models/Coupon";
 import { CustomerModel } from "@/models/Customer";
 import { EnquiryModel } from "@/models/Enquiry";
@@ -16,6 +17,7 @@ import {
   categories as seedCategories,
   orders as seedOrders,
   blogs as seedBlogs,
+  galleryItems as seedGallery,
   coupons as seedCoupons,
   customers as seedCustomers,
   enquiries as seedEnquiries,
@@ -53,6 +55,14 @@ export async function seedDatabase(force = false) {
     if (force) await BlogModel.deleteMany({});
     await BlogModel.insertMany(seedBlogs);
     console.log(`Seeded ${seedBlogs.length} blogs`);
+  }
+
+  // 3.1 Check & Seed Gallery
+  const gallCount = await GalleryModel.countDocuments();
+  if (gallCount === 0 || force) {
+    if (force) await GalleryModel.deleteMany({});
+    await GalleryModel.insertMany(seedGallery);
+    console.log(`Seeded ${seedGallery.length} gallery items`);
   }
 
   // 4. Check & Seed Testimonials

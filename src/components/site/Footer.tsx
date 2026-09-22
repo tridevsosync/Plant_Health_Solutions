@@ -16,17 +16,22 @@ export function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1.3fr] lg:gap-8 xl:gap-12">
           {/* Column 1: Brand Info */}
           <div className="flex flex-col">
-            <Link href="/" className="inline-flex items-center gap-3 group w-fit">
-              <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white p-1 shadow-xs transition-transform group-hover:scale-105 shrink-0 overflow-hidden">
+            <Link href="/" className="inline-flex items-center gap-3.5 sm:gap-4 group w-fit">
+              <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-white p-1.5 sm:p-2 shadow-md transition-transform group-hover:scale-105 shrink-0 overflow-hidden border border-white/20">
                 <img
                   src="/logo.png"
                   alt={s.name || "Plant Health Solutions"}
                   className="h-full w-full object-contain"
                 />
               </div>
-              <span className="font-display text-xl font-bold tracking-tight text-white">
-                {s.name || "Plant Health Solutions"}
-              </span>
+              <div className="flex flex-col">
+                <span className="font-display text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">
+                  {s.name || "Plant Health Solutions"}
+                </span>
+                <span className="text-xs sm:text-sm text-[#a8d672] font-medium tracking-normal mt-0.5">
+                  Agricultural Research &amp; Bio Inputs
+                </span>
+              </div>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#d1dbcd]">
               {s.description ||
@@ -114,7 +119,12 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/blog" className="transition-colors hover:text-white">
-                  Blog
+                  Agronomy Blog
+                </Link>
+              </li>
+              <li>
+                <Link href="/gallery" className="transition-colors hover:text-white">
+                  Photo &amp; Video Gallery
                 </Link>
               </li>
               <li>
