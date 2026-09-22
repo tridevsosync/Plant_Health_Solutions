@@ -13,6 +13,7 @@ import {
   products as seedProducts,
   reviews as seedReviews,
   testimonials as seedTestimonials,
+  teamMembers as seedTeamMembers,
   type Blog,
   type Category,
   type Coupon,
@@ -23,6 +24,7 @@ import {
   type Product,
   type Review,
   type Testimonial,
+  type TeamMember,
 } from "./data";
 
 const KEY = "phs_state_v5";
@@ -79,6 +81,11 @@ export type Settings = {
   soilTestingDesc?: string;
   soilTestingButtonText?: string;
   soilTestingLinkUrl?: string;
+  // Team Section settings
+  showTeamSection?: boolean;
+  teamSectionBadge?: string;
+  teamSectionTitle?: string;
+  teamSectionSubtitle?: string;
 };
 
 export type State = {
@@ -87,6 +94,7 @@ export type State = {
   blogs: Blog[];
   gallery: GalleryItem[];
   testimonials: Testimonial[];
+  team: TeamMember[];
   customers: Customer[];
   orders: Order[];
   reviews: Review[];
@@ -157,7 +165,14 @@ const initialState: State = {
       "Bring or courier your soil and water sample to our Tidagundi lab. Our chief agronomists will analyze pH, organic carbon, and micronutrient status free of cost.",
     soilTestingButtonText: "Explore Crop Solutions →",
     soilTestingLinkUrl: "/farmer-solutions",
+    // Team page settings
+    showTeamSection: true,
+    teamSectionBadge: "Leadership & Experts",
+    teamSectionTitle: "Meet our team",
+    teamSectionSubtitle:
+      "Led by senior agronomists, biochemists, and farm operation specialists dedicated to advancing sustainable agriculture.",
   },
+  team: seedTeamMembers,
   cart: [],
   wishlist: [],
   users: [],
@@ -230,6 +245,10 @@ type Ctx = {
   updateReviewStatus: (id: string, status: "Pending" | "Approved" | "Rejected") => Promise<boolean>;
   deleteReview: (id: string) => Promise<boolean>;
   deleteAllReviews: () => Promise<boolean>;
+  // Team CRUD
+  saveTeamMember: (m: TeamMember, isNew: boolean) => Promise<boolean>;
+  deleteTeamMember: (id: string) => Promise<boolean>;
+  deleteAllTeamMembers: () => Promise<boolean>;
   // Settings
   saveSettings: (s: Settings) => Promise<boolean>;
 };
@@ -255,6 +274,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         gallRes,
         orderRes,
         testRes,
+        teamRes,
         enqRes,
         coupRes,
         custRes,
@@ -267,6 +287,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetch("/api/gallery").then((r) => r.json()),
         fetch("/api/orders").then((r) => r.json()),
         fetch("/api/testimonials?all=true").then((r) => r.json()),
+        fetch("/api/team?all=true").then((r) => r.json()),
         fetch("/api/enquiries").then((r) => r.json()),
         fetch("/api/coupons").then((r) => r.json()),
         fetch("/api/customers").then((r) => r.json()),
@@ -295,6 +316,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         if (testRes.status === "fulfilled" && testRes.value?.success && Array.isArray(testRes.value.testimonials)) {
           next.testimonials = testRes.value.testimonials;
+        }
+        if (teamRes.status === "fulfilled" && teamRes.value?.success && Array.isArray(teamRes.value.team)) {
+          next.team = teamRes.value.team;
         }
         if (enqRes.status === "fulfilled" && enqRes.value?.success && Array.isArray(enqRes.value.enquiries)) {
           next.enquiries = enqRes.value.enquiries;
@@ -332,6 +356,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           categories: parsed.categories && parsed.categories.length > 0 ? parsed.categories : s.categories,
           blogs: parsed.blogs && parsed.blogs.length > 0 ? parsed.blogs : s.blogs,
           gallery: parsed.gallery && parsed.gallery.length > 0 ? parsed.gallery : s.gallery && s.gallery.length > 0 ? s.gallery : seedGallery,
+          team: parsed.team && parsed.team.length > 0 ? parsed.team : s.team && s.team.length > 0 ? s.team : seedTeamMembers,
         }));
 
         if (parsed.currentUser) {
@@ -1201,6 +1226,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  // Team CRUD
+  const saveTeamMember = async (m: TeamMember, isNew: boolean) => {
+    try {
+      const url = isNew ? "/api/team" : `/api/team/${encodeURIComponent(m.id)}`;
+      const method = isNew ? "POST" : "PUT";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(m),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const saved = data.member || m;
+        set((s) => ({
+          ...s,
+          team: isNew
+            ? [...s.team, saved]
+            : s.team.map((item) => (item.id === saved.id ? saved : item)),
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.error("Save team member error:", e);
+    }
+    const fallbackItem = { ...m, id: m.id || `team_${Date.now()}` };
+    set((s) => ({
+      ...s,
+      team: isNew
+        ? [...s.team, fallbackItem]
+        : s.team.map((item) => (item.id === m.id ? fallbackItem : item)),
+    }));
+    return true;
+  };
+
+  const deleteTeamMember = async (id: string) => {
+    try {
+      await fetch(`/api/team/${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete team member error:", e);
+    }
+    set((s) => ({ ...s, team: s.team.filter((t) => t.id !== id) }));
+    return true;
+  };
+
+  const deleteAllTeamMembers = async () => {
+    try {
+      await fetch("/api/team", { method: "DELETE" });
+    } catch (e) {
+      console.error("Delete all team members error:", e);
+    }
+    set((s) => ({ ...s, team: [] }));
+    return true;
+  };
+
   // Product Reviews & Feedback CRUD
   const submitProductReview = async (review: Partial<Review>) => {
     const id = review.id || `r_${Date.now()}`;
@@ -1481,6 +1560,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateTestimonialStatus,
     deleteTestimonial,
     deleteAllTestimonials,
+    saveTeamMember,
+    deleteTeamMember,
+    deleteAllTeamMembers,
     submitProductReview,
     updateReviewStatus,
     deleteReview,

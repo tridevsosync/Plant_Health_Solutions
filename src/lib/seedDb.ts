@@ -9,6 +9,7 @@ import { CouponModel } from "@/models/Coupon";
 import { CustomerModel } from "@/models/Customer";
 import { EnquiryModel } from "@/models/Enquiry";
 import { TestimonialModel } from "@/models/Testimonial";
+import { TeamMemberModel } from "@/models/TeamMember";
 import { ReviewModel } from "@/models/Review";
 import { SettingModel } from "@/models/Setting";
 import { UserModel } from "@/models/User";
@@ -22,6 +23,7 @@ import {
   customers as seedCustomers,
   enquiries as seedEnquiries,
   testimonials as seedTestimonials,
+  teamMembers as seedTeamMembers,
   reviews as seedReviews,
   COMPANY,
 } from "./data";
@@ -71,6 +73,14 @@ export async function seedDatabase(force = false) {
     if (force) await TestimonialModel.deleteMany({});
     await TestimonialModel.insertMany(seedTestimonials);
     console.log(`Seeded ${seedTestimonials.length} testimonials`);
+  }
+
+  // 4.1 Check & Seed Team Members
+  const teamCount = await TeamMemberModel.countDocuments();
+  if (teamCount === 0 || force) {
+    if (force) await TeamMemberModel.deleteMany({});
+    await TeamMemberModel.insertMany(seedTeamMembers);
+    console.log(`Seeded ${seedTeamMembers.length} team members`);
   }
 
   // 5. Check & Seed Coupons

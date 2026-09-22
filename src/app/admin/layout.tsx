@@ -17,6 +17,7 @@ import {
   Settings,
   ShoppingCart,
   Users,
+  UserCheck,
   X,
 } from "lucide-react";
 import { useApp } from "@/lib/store";
@@ -27,6 +28,7 @@ const nav = [
   { href: "/admin/categories", label: "Categories", icon: Boxes, exact: false },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart, exact: false },
   { href: "/admin/customers", label: "Customers", icon: Users, exact: false },
+  { href: "/admin/team", label: "Team Members", icon: UserCheck, exact: false },
   { href: "/admin/blogs", label: "Blogs", icon: FileText, exact: false },
   { href: "/admin/gallery", label: "Gallery", icon: Images, exact: false },
   { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote, exact: false },

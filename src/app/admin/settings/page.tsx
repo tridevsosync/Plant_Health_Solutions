@@ -24,12 +24,13 @@ import {
   Send,
   Image as ImageIcon,
   Compass,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { inr, useApp, type Settings } from "@/lib/store";
 import { AdminPage, Btn, Field, Panel, inputCls } from "@/components/site/AdminUI";
 
-type TabKey = "general" | "contact" | "contactPage" | "store" | "social";
+type TabKey = "general" | "contact" | "contactPage" | "aboutPage" | "store" | "social";
 
 export default function AdminSettingsPage() {
   const { state, saveSettings, refreshData } = useApp();
@@ -71,6 +72,7 @@ export default function AdminSettingsPage() {
     { id: "general", label: "Company Profile", icon: Building2 },
     { id: "contact", label: "Contact & Helplines", icon: Phone },
     { id: "contactPage", label: "Contact Page Customizer", icon: LayoutTemplate },
+    { id: "aboutPage", label: "About & Team Settings", icon: UserCheck },
     { id: "store", label: "Store & Shipping", icon: Truck },
     { id: "social", label: "Social Links", icon: Globe },
   ];
@@ -587,6 +589,97 @@ export default function AdminSettingsPage() {
                       </Field>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab: About & Team Page Customizer */}
+            {activeTab === "aboutPage" && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-display text-base font-bold text-foreground">
+                    About Page &amp; Team Section Settings
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Configure visibility and section titles for the &quot;Meet Our Team&quot; section on the About page.
+                  </p>
+                </div>
+
+                {/* Team Section Visibility Switch */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border bg-muted/20 p-4">
+                  <div>
+                    <h4 className="font-display text-sm font-bold text-foreground">
+                      Show &quot;Meet Our Team&quot; Section
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Toggle whether the team members grid is visible to visitors on the About page.
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-3 cursor-pointer select-none shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={form.showTeamSection !== false}
+                      onChange={(e) => setForm({ ...form, showTeamSection: e.target.checked })}
+                      className="h-5 w-5 rounded text-primary focus:ring-primary"
+                    />
+                    <span className="text-xs font-bold text-foreground">
+                      {form.showTeamSection !== false ? "Section Enabled (Visible)" : "Section Disabled (Hidden)"}
+                    </span>
+                  </label>
+                </div>
+
+                {/* Section Headings */}
+                <div className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4">
+                  <h4 className="font-display text-sm font-bold text-foreground">
+                    Team Section Headings &amp; Badges
+                  </h4>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Section Badge Text">
+                      <input
+                        className={inputCls}
+                        value={form.teamSectionBadge || ""}
+                        onChange={(e) => setForm({ ...form, teamSectionBadge: e.target.value })}
+                        placeholder="Leadership & Experts"
+                      />
+                    </Field>
+
+                    <Field label="Section Main Title">
+                      <input
+                        className={inputCls}
+                        value={form.teamSectionTitle || ""}
+                        onChange={(e) => setForm({ ...form, teamSectionTitle: e.target.value })}
+                        placeholder="Meet our team"
+                      />
+                    </Field>
+
+                    <div className="sm:col-span-2">
+                      <Field label="Section Subtitle / Description">
+                        <textarea
+                          rows={2}
+                          className={inputCls}
+                          value={form.teamSectionSubtitle || ""}
+                          onChange={(e) => setForm({ ...form, teamSectionSubtitle: e.target.value })}
+                          placeholder="Led by senior agronomists, biochemists, and farm operation specialists..."
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Link to Team Member Management */}
+                <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Manage Team Member Profiles</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Add, edit, or delete individual team members and their photos.
+                    </p>
+                  </div>
+                  <Link
+                    href="/admin/team"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-white hover:bg-primary/90 transition-colors shadow-2xs"
+                  >
+                    Open Team Manager &rarr;
+                  </Link>
                 </div>
               </div>
             )}

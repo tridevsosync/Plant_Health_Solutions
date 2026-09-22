@@ -41,6 +41,11 @@ export interface ISetting extends Document {
   soilTestingDesc?: string;
   soilTestingButtonText?: string;
   soilTestingLinkUrl?: string;
+  // Team Section Customization Fields
+  showTeamSection?: boolean;
+  teamSectionBadge?: string;
+  teamSectionTitle?: string;
+  teamSectionSubtitle?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -127,6 +132,15 @@ const SettingSchema = new Schema<ISetting>(
     },
     soilTestingButtonText: { type: String, default: "Explore Crop Solutions →" },
     soilTestingLinkUrl: { type: String, default: "/farmer-solutions" },
+    // Team Section Customization Defaults
+    showTeamSection: { type: Boolean, default: true },
+    teamSectionBadge: { type: String, default: "Leadership & Experts" },
+    teamSectionTitle: { type: String, default: "Meet our team" },
+    teamSectionSubtitle: {
+      type: String,
+      default:
+        "Led by senior agronomists, biochemists, and farm operation specialists dedicated to advancing sustainable agriculture.",
+    },
   },
   { timestamps: true }
 );
