@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   if (!body.code || body.discount === undefined) {
     return NextResponse.json(
-      { success: false, error: "Coupon code and discount percentage are required" },
+      { success: false, error: "Coupon code and discount amount are required" },
       { status: 400 }
     );
   }
@@ -39,8 +39,12 @@ export async function POST(req: NextRequest) {
   const newCoupon: Coupon = {
     code: cleanCode,
     discount: Number(body.discount),
+    discountType: body.discountType === "fixed" ? "fixed" : "percentage",
     minOrder: Number(body.minOrder || 0),
+    maxDiscount: Number(body.maxDiscount || 0),
     description: body.description || "",
+    isActive: body.isActive !== false,
+    expiryDate: body.expiryDate || "",
   };
 
   try {
@@ -54,7 +58,9 @@ export async function POST(req: NextRequest) {
     }
 
     const coupon = await CouponModel.create(newCoupon);
-    const resultObj = coupon.toObject ? coupon.toObject() : newCoupon;
+    const resultObj: Coupon = coupon.toObject
+      ? JSON.parse(JSON.stringify(coupon.toObject()))
+      : newCoupon;
     memoryCoupons = [resultObj, ...memoryCoupons.filter((c) => c.code !== cleanCode)];
     return NextResponse.json({ success: true, coupon: resultObj });
   } catch (error: unknown) {

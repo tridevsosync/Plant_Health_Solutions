@@ -1,5 +1,15 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
+export interface IProductVariant {
+  id?: string;
+  packSize: string;
+  price: number;
+  oldPrice?: number;
+  quantity: number;
+  image?: string;
+  sku?: string;
+}
+
 export interface IProduct extends Document {
   id: string;
   name: string;
@@ -18,9 +28,23 @@ export interface IProduct extends Document {
   usage: string;
   ingredients: string;
   badges: string[];
+  variants?: IProductVariant[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const VariantSchema = new Schema(
+  {
+    id: { type: String },
+    packSize: { type: String, required: true },
+    price: { type: Number, required: true, default: 0 },
+    oldPrice: { type: Number, default: 0 },
+    quantity: { type: Number, default: 100 },
+    image: { type: String, default: "" },
+    sku: { type: String, default: "" },
+  },
+  { _id: false }
+);
 
 const ProductSchema = new Schema<IProduct>(
   {
@@ -41,6 +65,7 @@ const ProductSchema = new Schema<IProduct>(
     usage: { type: String, default: "" },
     ingredients: { type: String, default: "" },
     badges: { type: [String], default: [] },
+    variants: { type: [VariantSchema], default: [] },
   },
   { timestamps: true }
 );

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { useApp } from "@/lib/store";
 import type { Testimonial, Review } from "@/lib/data";
 import { AdminPage, Btn, Field, Modal, TableWrap, inputCls, td, th } from "@/components/site/AdminUI";
+import { ImageUploader } from "@/components/site/ImageUploader";
 
 const blankTestimonial: Testimonial = {
   id: "",
@@ -472,7 +473,24 @@ export default function AdminTestimonialsPage() {
                       </td>
 
                       <td className={`${td} max-w-xs sm:max-w-md text-xs text-foreground/90`}>
-                        <p className="line-clamp-3 italic">&ldquo;{r.comment}&rdquo;</p>
+                        <div className="flex items-start gap-3">
+                          {r.image && (
+                            <a
+                              href={r.image}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border bg-muted shadow-2xs hover:border-primary transition-all"
+                              title="Click to view full photo in new tab"
+                            >
+                              <img
+                                src={r.image}
+                                alt="Client crop photo"
+                                className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                              />
+                            </a>
+                          )}
+                          <p className="line-clamp-3 italic leading-relaxed">&ldquo;{r.comment}&rdquo;</p>
+                        </div>
                       </td>
 
                       <td className={td}>
@@ -695,8 +713,25 @@ export default function AdminTestimonialsPage() {
                           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
                         </div>
                       </td>
-                      <td className={`${td} max-w-md text-xs text-muted-foreground line-clamp-2`}>
-                        &ldquo;{t.quote}&rdquo;
+                      <td className={`${td} max-w-md text-xs text-foreground/90`}>
+                        <div className="flex items-start gap-3">
+                          {t.image && (
+                            <a
+                              href={t.image}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border bg-muted shadow-2xs hover:border-primary transition-all"
+                              title="Click to view full photo in new tab"
+                            >
+                              <img
+                                src={t.image}
+                                alt="Farmer crop result"
+                                className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                              />
+                            </a>
+                          )}
+                          <p className="line-clamp-3 italic leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+                        </div>
                       </td>
                       <td className={td}>
                         <span
@@ -871,6 +906,13 @@ export default function AdminTestimonialsPage() {
                 placeholder="Describe crop yield increase, vegetative vigor, disease resistance observations..."
               />
             </Field>
+
+            <ImageUploader
+              value={editingTestimonial.image || ""}
+              onChange={(url) => setEditingTestimonial({ ...editingTestimonial, image: url })}
+              label="Field / Crop Result Photo (Optional)"
+              folder="plant_health_solutions/testimonials"
+            />
 
             <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <Btn variant="ghost" onClick={() => setEditingTestimonial(null)}>

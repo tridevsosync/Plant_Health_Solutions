@@ -23,6 +23,8 @@ import {
   RotateCcw,
   ArrowLeft,
   Check,
+  Tag,
+  X,
 } from "lucide-react";
 import { FREE_SHIPPING, SHIPPING_FEE, inr, useApp, useCartTotals, useUser } from "@/lib/store";
 import { PageHero } from "@/components/site/Section";
@@ -80,13 +82,15 @@ declare global {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { state, createOrder, sendLoginOtp, sendRegisterOtp, verifyOtp } = useApp();
+  const { state, createOrder, sendLoginOtp, sendRegisterOtp, verifyOtp, applyCoupon, removeCoupon, calculateCouponDiscount } = useApp();
   const user = useUser();
   const { lines, subtotal } = useCartTotals();
 
   // Checkout flow step (1: Address, 2: Payment, 3: Review)
   const [step, setStep] = React.useState(1);
   const [submitting, setSubmitting] = React.useState(false);
+  const [checkoutCoupon, setCheckoutCoupon] = React.useState("");
+  const [applyingCoupon, setApplyingCoupon] = React.useState(false);
 
   // Address state
   const [addr, setAddr] = React.useState({
@@ -155,12 +159,31 @@ export default function CheckoutPage() {
     toast.success("Delivery address selected!");
   };
 
-  const discount = 0;
+  const appliedCoupon = state.appliedCoupon;
+  const discount = calculateCouponDiscount(appliedCoupon, subtotal);
   const freeShippingLimit = state.settings.freeShippingThreshold ?? FREE_SHIPPING;
   const standardShippingFee = state.settings.shippingFee ?? SHIPPING_FEE;
   const shipping = subtotal >= freeShippingLimit ? 0 : standardShippingFee;
-  const tax = Math.round(subtotal * 0.05);
-  const total = subtotal + shipping + tax;
+  const taxableAmount = Math.max(0, subtotal - discount);
+  const tax = Math.round(taxableAmount * 0.05);
+  const total = taxableAmount + shipping + tax;
+
+  const handleApplyCheckoutCoupon = () => {
+    const code = checkoutCoupon.trim();
+    if (!code) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+    setApplyingCoupon(true);
+    const res = applyCoupon(code, subtotal);
+    setApplyingCoupon(false);
+    if (res.success) {
+      toast.success(res.message);
+      setCheckoutCoupon("");
+    } else {
+      toast.error(res.message);
+    }
+  };
 
   // Preload Razorpay Script on mount so checkout modal is immediately responsive
   React.useEffect(() => {
@@ -370,10 +393,10 @@ export default function CheckoutPage() {
       .map((l) => ({
         id: l.line.id,
         name: l.product!.name,
-        price: l.product!.price,
+        price: l.itemPrice ?? l.product!.price,
         qty: l.line.qty,
-        unit: l.product!.unit,
-        image: l.product!.image,
+        unit: l.itemUnit || l.product!.unit,
+        image: l.itemImage || l.product!.image,
       }));
 
     setSubmitting(true);
@@ -1168,23 +1191,23 @@ export default function CheckoutPage() {
                         {lines.map((l) =>
                           l.product ? (
                             <li
-                              key={l.line.id}
+                              key={`${l.line.id}-${l.line.packSize || ""}`}
                               className="flex items-center justify-between border-b border-border/70 pb-2.5 text-xs sm:text-sm"
                             >
                               <div className="flex items-center gap-2.5">
                                 <img
-                                  src={l.product.image}
+                                  src={l.itemImage || l.product.image}
                                   alt={l.product.name}
                                   className="h-10 w-10 rounded-lg object-cover"
                                 />
                                 <div>
                                   <div className="font-semibold text-foreground">{l.product.name}</div>
                                   <div className="text-[11px] text-muted-foreground">
-                                    Qty: {l.line.qty} {l.product.unit ? `· ${l.product.unit}` : ""}
+                                    Qty: {l.line.qty} {l.itemUnit || l.product.unit ? `· ${l.itemUnit || l.product.unit}` : ""}
                                   </div>
                                 </div>
                               </div>
-                              <span className="font-bold text-primary">{inr(l.product.price * l.line.qty)}</span>
+                              <span className="font-bold text-primary">{inr(l.itemPrice * l.line.qty)}</span>
                             </li>
                           ) : null,
                         )}
@@ -1226,12 +1249,69 @@ export default function CheckoutPage() {
           <aside className="h-fit rounded-3xl border border-border bg-card p-6 shadow-sm">
             <h3 className="font-display text-xl font-bold text-foreground">Order Summary</h3>
 
+            {/* Coupon Code Section */}
+            <div className="mt-4 rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5 text-primary" /> Coupon Code
+              </label>
+
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between rounded-lg border border-emerald-500/40 bg-emerald-50 p-2 dark:bg-emerald-950/30">
+                  <div>
+                    <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                      {appliedCoupon.code}
+                    </span>
+                    <span className="block text-[11px] text-emerald-600 dark:text-emerald-400">
+                      Saved {inr(discount)}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeCoupon();
+                      toast.info("Coupon removed");
+                    }}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-emerald-100 hover:text-destructive transition-colors"
+                    title="Remove coupon"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={checkoutCoupon}
+                    onChange={(e) => setCheckoutCoupon(e.target.value.toUpperCase())}
+                    placeholder="Enter promo code"
+                    className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-mono font-bold uppercase placeholder:font-sans placeholder:font-normal placeholder:text-muted-foreground/60 outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCheckoutCoupon}
+                    disabled={applyingCoupon || !checkoutCoupon.trim()}
+                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
+                    {applyingCoupon ? "..." : "Apply"}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Price breakdown */}
-            <dl className="mt-5 space-y-2.5 text-xs sm:text-sm text-muted-foreground">
+            <dl className="mt-4 space-y-2.5 text-xs sm:text-sm text-muted-foreground">
               <div className="flex justify-between">
                 <dt>Subtotal ({lines.reduce((s, c) => s + c.line.qty, 0)} items)</dt>
                 <dd className="font-medium text-foreground">{inr(subtotal)}</dd>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-emerald-600 font-semibold">
+                  <dt className="flex items-center gap-1.5">
+                    <Tag className="h-3.5 w-3.5" /> Coupon Discount ({appliedCoupon?.code})
+                  </dt>
+                  <dd>-{inr(discount)}</dd>
+                </div>
+              )}
               <div className="flex justify-between">
                 <dt>Doorstep Delivery</dt>
                 <dd className="font-medium text-foreground">{shipping ? inr(shipping) : "Free"}</dd>
