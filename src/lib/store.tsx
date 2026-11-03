@@ -26,10 +26,11 @@ import {
   type Testimonial,
   type TeamMember,
 } from "./data";
+export type { Coupon, Product, Order, Category, Blog, Customer, Enquiry, Review, Testimonial, TeamMember, GalleryItem };
 
 const KEY = "phs_state_v5";
 
-export type CartLine = { id: string; qty: number };
+export type CartLine = { id: string; qty: number; packSize?: string; price?: number; variantId?: string; image?: string };
 export type Address = { label: string; line: string; city: string; state?: string; pincode: string };
 export type User = {
   id?: string;
@@ -86,6 +87,34 @@ export type Settings = {
   teamSectionBadge?: string;
   teamSectionTitle?: string;
   teamSectionSubtitle?: string;
+  // Home Popup settings
+  showHomePopup?: boolean;
+  homePopupImage?: string;
+  homePopupTitle?: string;
+  homePopupSubtitle?: string;
+  homePopupLink?: string;
+  homePopupButtonText?: string;
+  // Ad Section settings
+  showAdSection?: boolean;
+  adSectionImage?: string;
+  adSectionLink?: string;
+  adSectionTitle?: string;
+  // Floating Corner Action Buttons (Call, Insta, WhatsApp, YouTube)
+  showFloatingActions?: boolean;
+  floatingPosition?: string;
+  floatingCallEnabled?: boolean;
+  floatingCallNumber?: string;
+  floatingCallLabel?: string;
+  floatingWhatsappEnabled?: boolean;
+  floatingWhatsappNumber?: string;
+  floatingWhatsappMessage?: string;
+  floatingWhatsappLabel?: string;
+  floatingInstagramEnabled?: boolean;
+  floatingInstagramUrl?: string;
+  floatingInstagramLabel?: string;
+  floatingYoutubeEnabled?: boolean;
+  floatingYoutubeUrl?: string;
+  floatingYoutubeLabel?: string;
 };
 
 export type State = {
@@ -100,6 +129,7 @@ export type State = {
   reviews: Review[];
   enquiries: Enquiry[];
   coupons: Coupon[];
+  appliedCoupon: Coupon | null;
   settings: Settings;
   cart: CartLine[];
   wishlist: string[];
@@ -120,6 +150,7 @@ const initialState: State = {
   reviews: seedReviews,
   enquiries: seedEnquiries,
   coupons: seedCoupons,
+  appliedCoupon: null,
   settings: {
     name: COMPANY.name,
     owner: COMPANY.owner,
@@ -171,6 +202,37 @@ const initialState: State = {
     teamSectionTitle: "Meet our team",
     teamSectionSubtitle:
       "Led by senior agronomists, biochemists, and farm operation specialists dedicated to advancing sustainable agriculture.",
+    // Home Popup settings
+    showHomePopup: true,
+    homePopupImage:
+      "https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?auto=format&fit=crop&w=1200&q=80",
+    homePopupTitle: "Special Seasonal Agriculture Offer",
+    homePopupSubtitle:
+      "Get up to 25% off on research-backed bio-fertilizers and micronutrients.",
+    homePopupLink: "/products",
+    homePopupButtonText: "Explore Products",
+    // Ad Section settings
+    showAdSection: true,
+    adSectionImage:
+      "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1600&q=80",
+    adSectionLink: "/products",
+    adSectionTitle: "Plant Health Solutions Featured Promotion",
+    // Floating Action Buttons defaults
+    showFloatingActions: true,
+    floatingPosition: "bottom-right",
+    floatingCallEnabled: true,
+    floatingCallNumber: "+91 91759 55009",
+    floatingCallLabel: "Call Helpline",
+    floatingWhatsappEnabled: true,
+    floatingWhatsappNumber: "+91 91759 55009",
+    floatingWhatsappMessage: "Hello Plant Health Solutions, I would like to inquire about your products and crop solutions.",
+    floatingWhatsappLabel: "Chat on WhatsApp",
+    floatingInstagramEnabled: true,
+    floatingInstagramUrl: "https://instagram.com",
+    floatingInstagramLabel: "Follow on Instagram",
+    floatingYoutubeEnabled: true,
+    floatingYoutubeUrl: "https://youtube.com",
+    floatingYoutubeLabel: "Watch on YouTube",
   },
   team: seedTeamMembers,
   cart: [],
@@ -187,9 +249,9 @@ type Ctx = {
   set: (fn: (s: State) => State) => void;
   refreshData: () => Promise<void>;
   // Cart & Wishlist
-  addToCart: (id: string, qty?: number) => void;
-  setQty: (id: string, qty: number) => void;
-  removeFromCart: (id: string) => void;
+  addToCart: (id: string, qty?: number, variant?: { packSize?: string; price?: number; variantId?: string; image?: string }) => void;
+  setQty: (id: string, qty: number, packSize?: string) => void;
+  removeFromCart: (id: string, packSize?: string) => void;
   clearCart: () => void;
   toggleWishlist: (id: string) => void;
   // Auth & 2-Step Verification
@@ -221,10 +283,13 @@ type Ctx = {
   saveGalleryItem: (item: GalleryItem, isNew: boolean) => Promise<boolean>;
   deleteGalleryItem: (id: string) => Promise<boolean>;
   deleteAllGalleryItems: () => Promise<boolean>;
-  // Coupon CRUD
+  // Coupon CRUD & Application
   saveCoupon: (coupon: Coupon, isNew: boolean) => Promise<boolean>;
   deleteCoupon: (code: string) => Promise<boolean>;
   deleteAllCoupons: () => Promise<boolean>;
+  applyCoupon: (code: string, currentSubtotal?: number) => { success: boolean; message: string; discount?: number; coupon?: Coupon };
+  removeCoupon: () => void;
+  calculateCouponDiscount: (coupon: Coupon | null, subtotal: number) => number;
   // Customer CRUD
   saveCustomer: (c: Customer, isNew: boolean) => Promise<boolean>;
   deleteCustomer: (id: string) => Promise<boolean>;
@@ -736,6 +801,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ...s,
           orders: [savedOrder, ...s.orders],
           cart: [], // Clear cart upon successful order
+          appliedCoupon: null, // Clear applied coupon upon order
         }));
         return { success: true, order: savedOrder };
       }
@@ -930,8 +996,85 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     set((s) => ({
       ...s,
       coupons: [],
+      appliedCoupon: null,
     }));
     return true;
+  };
+
+  const calculateCouponDiscount = (coupon: Coupon | null, subtotal: number): number => {
+    if (!coupon || !coupon.discount || subtotal <= 0) return 0;
+    if (coupon.minOrder && subtotal < coupon.minOrder) return 0;
+    if (coupon.isActive === false) return 0;
+    if (coupon.expiryDate) {
+      const exp = new Date(coupon.expiryDate);
+      if (!isNaN(exp.getTime()) && exp < new Date()) return 0;
+    }
+
+    const isFixed = coupon.discountType === "fixed" || (!coupon.discountType && coupon.discount > 100);
+    if (isFixed) {
+      return Math.min(coupon.discount, subtotal);
+    }
+    let disc = Math.round((subtotal * coupon.discount) / 100);
+    if (coupon.maxDiscount && coupon.maxDiscount > 0) {
+      disc = Math.min(disc, coupon.maxDiscount);
+    }
+    return Math.min(disc, subtotal);
+  };
+
+  const applyCoupon = (code: string, currentSubtotal?: number) => {
+    const cleanCode = code.trim().toUpperCase();
+    if (!cleanCode) {
+      return { success: false, message: "Please enter a coupon code" };
+    }
+
+    const coupon = state.coupons.find(
+      (c) => c.code.trim().toUpperCase() === cleanCode
+    );
+
+    if (!coupon) {
+      return { success: false, message: `Coupon code "${cleanCode}" is invalid.` };
+    }
+
+    if (coupon.isActive === false) {
+      return { success: false, message: `Coupon "${cleanCode}" is currently inactive.` };
+    }
+
+    if (coupon.expiryDate) {
+      const exp = new Date(coupon.expiryDate);
+      if (!isNaN(exp.getTime()) && exp < new Date()) {
+        return { success: false, message: `Coupon "${cleanCode}" has expired.` };
+      }
+    }
+
+    const subtotal =
+      currentSubtotal !== undefined
+        ? currentSubtotal
+        : state.cart.reduce((s, line) => {
+            const prod = state.products.find((p) => p.id === line.id);
+            return s + (prod ? prod.price * line.qty : 0);
+          }, 0);
+
+    if (coupon.minOrder && subtotal < coupon.minOrder) {
+      return {
+        success: false,
+        message: `Minimum order amount of ₹${coupon.minOrder.toLocaleString("en-IN")} required for coupon "${cleanCode}".`,
+      };
+    }
+
+    const discount = calculateCouponDiscount(coupon, subtotal);
+
+    set((s) => ({ ...s, appliedCoupon: coupon }));
+
+    return {
+      success: true,
+      message: `Coupon "${cleanCode}" applied! You saved ₹${discount.toLocaleString("en-IN")}.`,
+      discount,
+      coupon,
+    };
+  };
+
+  const removeCoupon = () => {
+    set((s) => ({ ...s, appliedCoupon: null }));
   };
 
   const saveCustomer = async (c: Customer, isNew: boolean) => {
@@ -1293,6 +1436,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       rating: Number(review.rating || 5),
       date,
       comment: review.comment ? review.comment.trim() : "",
+      image: review.image || "",
       status,
     };
 
@@ -1501,22 +1645,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     set,
     refreshData,
     product: (id) => state.products.find((p) => p.id === id),
-    addToCart: (id, qty = 1) =>
+    addToCart: (id, qty = 1, variant) =>
       set((s) => {
-        const existing = s.cart.find((c) => c.id === id);
+        const existingIndex = s.cart.findIndex(
+          (c) =>
+            c.id === id &&
+            (variant?.packSize ? c.packSize === variant.packSize : !c.packSize)
+        );
+        if (existingIndex > -1) {
+          return {
+            ...s,
+            cart: s.cart.map((c, idx) =>
+              idx === existingIndex ? { ...c, qty: c.qty + qty } : c
+            ),
+          };
+        }
         return {
           ...s,
-          cart: existing
-            ? s.cart.map((c) => (c.id === id ? { ...c, qty: c.qty + qty } : c))
-            : [...s.cart, { id, qty }],
+          cart: [
+            ...s.cart,
+            {
+              id,
+              qty,
+              packSize: variant?.packSize,
+              price: variant?.price,
+              variantId: variant?.variantId,
+              image: variant?.image,
+            },
+          ],
         };
       }),
-    setQty: (id, qty) =>
+    setQty: (id, qty, packSize) =>
       set((s) => ({
         ...s,
-        cart: s.cart.map((c) => (c.id === id ? { ...c, qty: Math.max(1, qty) } : c)),
+        cart: s.cart.map((c) =>
+          c.id === id && (!packSize || c.packSize === packSize)
+            ? { ...c, qty: Math.max(1, qty) }
+            : c
+        ),
       })),
-    removeFromCart: (id) => set((s) => ({ ...s, cart: s.cart.filter((c) => c.id !== id) })),
+    removeFromCart: (id, packSize) =>
+      set((s) => ({
+        ...s,
+        cart: s.cart.filter(
+          (c) => !(c.id === id && (!packSize || c.packSize === packSize))
+        ),
+      })),
     clearCart: () => set((s) => ({ ...s, cart: [] })),
     toggleWishlist: (id) =>
       set((s) => ({
@@ -1548,6 +1722,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveCoupon,
     deleteCoupon,
     deleteAllCoupons,
+    applyCoupon,
+    removeCoupon,
+    calculateCouponDiscount,
     saveCustomer,
     deleteCustomer,
     deleteAllCustomers,
@@ -1586,14 +1763,39 @@ export function useUser() {
 }
 
 export function useCartTotals() {
-  const { state } = useApp();
+  const { state, calculateCouponDiscount } = useApp();
   const lines = state.cart.map((c) => {
     const p = state.products.find((x) => x.id === c.id);
-    return { line: c, product: p };
+    const variant = p?.variants?.find(
+      (v) => (c.variantId && v.id === c.variantId) || (c.packSize && v.packSize === c.packSize)
+    );
+    const itemPrice = c.price ?? variant?.price ?? p?.price ?? 0;
+    const itemUnit = c.packSize ?? variant?.packSize ?? p?.unit ?? "";
+    const itemImage = c.image || variant?.image || p?.image || "";
+    return { line: c, product: p, variant, itemPrice, itemUnit, itemImage };
   });
-  const subtotal = lines.reduce((s, l) => s + (l.product ? l.product.price * l.line.qty : 0), 0);
+  const subtotal = lines.reduce((s, l) => s + (l.itemPrice * l.line.qty), 0);
   const count = state.cart.reduce((s, c) => s + c.qty, 0);
-  return { lines, subtotal, count };
+  const discount = calculateCouponDiscount(state.appliedCoupon, subtotal);
+  const freeShippingLimit = state.settings.freeShippingThreshold ?? FREE_SHIPPING;
+  const standardShippingFee = state.settings.shippingFee ?? SHIPPING_FEE;
+  const shipping = subtotal >= freeShippingLimit ? 0 : standardShippingFee;
+  const taxableAmount = Math.max(0, subtotal - discount);
+  const tax = Math.round(taxableAmount * 0.05);
+  const total = taxableAmount + shipping + tax;
+
+  return {
+    lines,
+    subtotal,
+    count,
+    discount,
+    appliedCoupon: state.appliedCoupon,
+    shipping,
+    tax,
+    total,
+    freeShippingLimit,
+    standardShippingFee,
+  };
 }
 
 export const inr = (n: number) =>

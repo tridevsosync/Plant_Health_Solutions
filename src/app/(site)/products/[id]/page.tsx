@@ -3,10 +3,176 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Check, Minus, Plus, ShieldCheck, Truck, ArrowLeft, Heart, ShoppingCart, Loader2 } from "lucide-react";
+import { Check, Minus, Plus, ShieldCheck, Truck, ArrowLeft, Heart, ShoppingCart, Loader2, Tag, Layers, CheckCircle2, Copy, Eye, Camera, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard, Stars } from "@/components/site/ProductCard";
+import type { ProductVariant } from "@/lib/data";
 import { inr, useApp, useUser } from "@/lib/store";
+import { ImageUploader } from "@/components/site/ImageUploader";
+
+// Helper to generate realistic agricultural pack sizes if a product does not have multiple custom variants
+function getSmartProductVariants(product: {
+  id: string;
+  unit?: string;
+  price: number;
+  oldPrice?: number;
+  stock: number;
+  image?: string;
+  variants?: ProductVariant[];
+}): ProductVariant[] {
+  if (product.variants && product.variants.length > 1) {
+    return product.variants;
+  }
+
+  const baseUnit = (product.unit || "1 L").trim();
+  const basePrice = Number(product.price) || 0;
+  const baseOldPrice = Number(product.oldPrice) || Math.round(basePrice * 1.25);
+  const baseStock = Number(product.stock) || 100;
+  const baseImg = product.image || "";
+
+  const u = baseUnit.toLowerCase();
+
+  // 1. Liquids (L, ml, liter, litre)
+  if (u.includes("l") || u.includes("ml")) {
+    return [
+      {
+        id: "var_250ml",
+        packSize: "250 ml",
+        price: Math.max(50, Math.round((basePrice * 0.32) / 5) * 5),
+        oldPrice: Math.max(70, Math.round((baseOldPrice * 0.32) / 5) * 5),
+        quantity: baseStock,
+        image: baseImg,
+      },
+      {
+        id: "var_500ml",
+        packSize: "500 ml",
+        price: Math.max(90, Math.round((basePrice * 0.58) / 5) * 5),
+        oldPrice: Math.max(120, Math.round((baseOldPrice * 0.58) / 5) * 5),
+        quantity: baseStock,
+        image: baseImg,
+      },
+      {
+        id: "var_1l",
+        packSize: "1 L",
+        price: basePrice,
+        oldPrice: baseOldPrice,
+        quantity: baseStock,
+        image: baseImg,
+      },
+      {
+        id: "var_5l",
+        packSize: "5 L",
+        price: Math.max(300, Math.round((basePrice * 4.6) / 10) * 10),
+        oldPrice: Math.max(400, Math.round((baseOldPrice * 4.65) / 10) * 10),
+        quantity: Math.max(15, Math.floor(baseStock / 3)),
+        image: baseImg,
+      },
+    ];
+  }
+
+  // 2. Powders / Granules / Solids (kg, g, gm, bag)
+  if (u.includes("kg") || u.includes("g") || u.includes("gm")) {
+    if (u.includes("25") || u.includes("50")) {
+      return [
+        {
+          id: "var_5kg",
+          packSize: "5 kg",
+          price: Math.max(100, Math.round((basePrice * 0.24) / 10) * 10),
+          oldPrice: Math.max(130, Math.round((baseOldPrice * 0.24) / 10) * 10),
+          quantity: baseStock,
+          image: baseImg,
+        },
+        {
+          id: "var_10kg",
+          packSize: "10 kg",
+          price: Math.max(190, Math.round((basePrice * 0.45) / 10) * 10),
+          oldPrice: Math.max(240, Math.round((baseOldPrice * 0.45) / 10) * 10),
+          quantity: baseStock,
+          image: baseImg,
+        },
+        {
+          id: "var_25kg",
+          packSize: baseUnit || "25 kg",
+          price: basePrice,
+          oldPrice: baseOldPrice,
+          quantity: baseStock,
+          image: baseImg,
+        },
+        {
+          id: "var_50kg",
+          packSize: "50 kg",
+          price: Math.max(450, Math.round((basePrice * 1.9) / 10) * 10),
+          oldPrice: Math.max(550, Math.round((baseOldPrice * 1.9) / 10) * 10),
+          quantity: Math.max(10, Math.floor(baseStock / 2)),
+          image: baseImg,
+        },
+      ];
+    }
+
+    return [
+      {
+        id: "var_250g",
+        packSize: "250 g",
+        price: Math.max(50, Math.round((basePrice * 0.32) / 5) * 5),
+        oldPrice: Math.max(70, Math.round((baseOldPrice * 0.32) / 5) * 5),
+        quantity: baseStock,
+        image: baseImg,
+      },
+      {
+        id: "var_500g",
+        packSize: "500 g",
+        price: Math.max(90, Math.round((basePrice * 0.58) / 5) * 5),
+        oldPrice: Math.max(120, Math.round((baseOldPrice * 0.58) / 5) * 5),
+        quantity: baseStock,
+        image: baseImg,
+      },
+      {
+        id: "var_1kg",
+        packSize: "1 kg",
+        price: basePrice,
+        oldPrice: baseOldPrice,
+        quantity: baseStock,
+        image: baseImg,
+      },
+      {
+        id: "var_5kg",
+        packSize: "5 kg",
+        price: Math.max(300, Math.round((basePrice * 4.6) / 10) * 10),
+        oldPrice: Math.max(400, Math.round((baseOldPrice * 4.65) / 10) * 10),
+        quantity: Math.max(15, Math.floor(baseStock / 3)),
+        image: baseImg,
+      },
+    ];
+  }
+
+  // 3. General Fallback
+  return [
+    {
+      id: "var_sm",
+      packSize: "500 ml",
+      price: Math.max(90, Math.round((basePrice * 0.58) / 5) * 5),
+      oldPrice: Math.max(120, Math.round((baseOldPrice * 0.58) / 5) * 5),
+      quantity: baseStock,
+      image: baseImg,
+    },
+    {
+      id: "var_std",
+      packSize: baseUnit || "1 L",
+      price: basePrice,
+      oldPrice: baseOldPrice,
+      quantity: baseStock,
+      image: baseImg,
+    },
+    {
+      id: "var_lg",
+      packSize: "5 L",
+      price: Math.max(300, Math.round((basePrice * 4.6) / 10) * 10),
+      oldPrice: Math.max(400, Math.round((baseOldPrice * 4.65) / 10) * 10),
+      quantity: Math.max(15, Math.floor(baseStock / 3)),
+      image: baseImg,
+    },
+  ];
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -18,8 +184,35 @@ export default function ProductDetailPage() {
   const [qty, setQty] = React.useState(1);
   const [tab, setTab] = React.useState("description");
   const [submittingReview, setSubmittingReview] = React.useState(false);
-  const [form, setForm] = React.useState({ name: "", rating: 5, comment: "" });
+  const [form, setForm] = React.useState({ name: "", rating: 5, comment: "", image: "" });
+  const [previewImage, setPreviewImage] = React.useState<string | null>(null);
   const [activeImage, setActiveImage] = React.useState(product?.image || "");
+
+  // Multi-pack size / variant options
+  const availableVariants: ProductVariant[] = React.useMemo(() => {
+    if (!product) return [];
+    return getSmartProductVariants(product);
+  }, [product]);
+
+  const [selectedVariant, setSelectedVariant] = React.useState<ProductVariant | null>(null);
+
+  React.useEffect(() => {
+    if (availableVariants.length > 0) {
+      const match = availableVariants.find(
+        (v) => product?.unit && v.packSize.toLowerCase() === product.unit.toLowerCase()
+      );
+      setSelectedVariant(match || availableVariants[0]);
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [availableVariants, product?.unit]);
+
+  const handleSelectVariant = (v: ProductVariant) => {
+    setSelectedVariant(v);
+    if (v.image) {
+      setActiveImage(v.image);
+    }
+  };
 
   React.useEffect(() => {
     if (product?.image) {
@@ -32,6 +225,33 @@ export default function ProductDetailPage() {
       setForm((f) => ({ ...f, name: user.name }));
     }
   }, [user, form.name]);
+
+  const reviews = React.useMemo(() => {
+    if (!product) return [];
+    const listReviews = (state.reviews || [])
+      .filter((r) => r.productId === product.id && (r.status === "Approved" || !r.status))
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        rating: r.rating || 5,
+        date: r.date,
+        comment: r.comment,
+        image: r.image,
+      }));
+
+    const listTestimonials = (state.testimonials || [])
+      .filter((t) => t.productId === product.id && (t.status === "Approved" || !t.status))
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        rating: t.rating || 5,
+        date: t.date || "Verified Farmer",
+        comment: t.quote,
+        image: t.image,
+      }));
+
+    return [...listReviews, ...listTestimonials];
+  }, [state.reviews, state.testimonials, product?.id]);
 
   if (!product) {
     return (
@@ -49,20 +269,29 @@ export default function ProductDetailPage() {
   }
 
   const isWished = state.wishlist.includes(product.id);
-  const reviews = (state.reviews || []).filter(
-    (r) => r.productId === product.id && (r.status === "Approved" || !r.status)
-  );
   const related = state.products
     .filter((p) => p.category.toLowerCase() === product.category.toLowerCase() && p.id !== product.id)
     .slice(0, 4);
-  const off = product.oldPrice > product.price
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+
+  // Active pricing, pack size and stock from selected option
+  const currentPrice = selectedVariant?.price ?? product.price;
+  const currentOldPrice = selectedVariant?.oldPrice ?? product.oldPrice;
+  const currentStock = selectedVariant?.quantity ?? product.stock;
+  const currentPackSize = selectedVariant?.packSize ?? product.unit;
+
+  const off = currentOldPrice > currentPrice
+    ? Math.round(((currentOldPrice - currentPrice) / currentOldPrice) * 100)
     : 0;
 
-  const galleryImages: string[] = [product.image, product.image2, ...(product.images || [])]
+  const galleryImages: string[] = [
+    product.image,
+    product.image2,
+    ...(product.images || []),
+    ...(availableVariants.map((v) => v.image).filter(Boolean)),
+  ]
     .filter((img): img is string => Boolean(img) && typeof img === "string")
     .filter((img, idx, arr) => arr.indexOf(img) === idx)
-    .slice(0, 2);
+    .slice(0, 4);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +312,12 @@ export default function ProductDetailPage() {
         name: form.name.trim(),
         rating: Number(form.rating),
         comment: form.comment.trim(),
+        image: form.image || "",
         status: "Pending",
       });
 
       if (res.success) {
-        setForm({ name: user?.name || "", rating: 5, comment: "" });
+        setForm({ name: user?.name || "", rating: 5, comment: "", image: "" });
         toast.success(
           res.message || "Thank you! Your feedback has been submitted for admin approval."
         );
@@ -202,28 +432,92 @@ export default function ProductDetailPage() {
 
             <div className="mt-5 flex items-baseline gap-3">
               <span className="font-display text-4xl font-black text-primary">
-                {inr(product.price)}
+                {inr(currentPrice)}
               </span>
-              {product.oldPrice > product.price && (
+              {currentOldPrice > currentPrice && (
                 <span className="text-lg text-muted-foreground line-through">
-                  {inr(product.oldPrice)}
+                  {inr(currentOldPrice)}
+                </span>
+              )}
+              {off > 0 && (
+                <span className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-bold text-destructive">
+                  {off}% OFF
                 </span>
               )}
             </div>
 
             <p className="mt-1 text-xs font-medium text-muted-foreground">
-              Pack Size: <span className="font-bold text-foreground">{product.unit}</span> · Inclusive of GST &amp; taxes
+              Selected Pack: <span className="font-bold text-foreground">{currentPackSize}</span> · Inclusive of GST &amp; all taxes
             </p>
 
-            <div className="mt-3">
+            {/* Interactive Pack Size Selector (Allows user to select any size) */}
+            <div className="mt-5 rounded-2xl border-2 border-primary/20 bg-primary/[0.03] p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                  <Layers className="h-4 w-4 text-primary" />
+                  Select Pack Size / Quantity:
+                </span>
+                <span className="text-xs font-semibold text-primary">
+                  {currentPackSize} selected
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {availableVariants.map((v, i) => {
+                  const isSelected = selectedVariant?.packSize?.toLowerCase() === v.packSize?.toLowerCase();
+                  const isOutOfStock = (v.quantity ?? 1) <= 0;
+                  return (
+                    <button
+                      key={v.id || i}
+                      type="button"
+                      disabled={isOutOfStock}
+                      onClick={() => handleSelectVariant(v)}
+                      className={`relative flex flex-col justify-between p-3 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer ${
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20 scale-[1.02]"
+                          : isOutOfStock
+                          ? "border-border/60 bg-muted/40 opacity-50 cursor-not-allowed"
+                          : "border-border bg-card hover:border-primary/50 hover:bg-muted/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-black text-sm text-foreground">
+                          {v.packSize}
+                        </span>
+                        {isSelected && (
+                          <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <div className="font-extrabold text-sm text-primary">
+                          {inr(v.price)}
+                        </div>
+                        {v.oldPrice && v.oldPrice > v.price ? (
+                          <div className="text-[10px] text-muted-foreground line-through">
+                            {inr(v.oldPrice)}
+                          </div>
+                        ) : null}
+                      </div>
+                      <span className={`mt-1.5 text-[10px] ${isOutOfStock ? "text-destructive font-bold" : "text-muted-foreground"}`}>
+                        {isOutOfStock ? "Out of Stock" : `${v.quantity ?? 100} available`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-3.5">
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
-                  product.stock > 0
+                  currentStock > 0
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-red-50 text-red-700 border border-red-200"
                 }`}
               >
-                {product.stock > 0 ? `✓ In stock (${product.stock} units available)` : "✕ Currently out of stock"}
+                {currentStock > 0
+                  ? `✓ In stock (${currentStock} units available for ${currentPackSize})`
+                  : `✕ Currently out of stock for ${currentPackSize}`}
               </span>
             </div>
 
@@ -232,12 +526,12 @@ export default function ProductDetailPage() {
             </p>
 
             {/* Quantity and Actions */}
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
               <div className="flex items-center rounded-full border border-border bg-background p-1 shadow-xs">
                 <button
                   type="button"
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="rounded-full p-2 hover:bg-muted text-foreground transition-colors"
+                  className="rounded-full p-2 hover:bg-muted text-foreground transition-colors cursor-pointer"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
@@ -245,27 +539,37 @@ export default function ProductDetailPage() {
                 <button
                   type="button"
                   onClick={() => setQty((q) => q + 1)}
-                  className="rounded-full p-2 hover:bg-muted text-foreground transition-colors"
+                  className="rounded-full p-2 hover:bg-muted text-foreground transition-colors cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
 
               <button
-                disabled={product.stock === 0}
+                disabled={currentStock <= 0}
                 onClick={() => {
-                  addToCart(product.id, qty);
-                  toast.success(`${qty}x ${product.name} added to cart`);
+                  addToCart(product.id, qty, {
+                    packSize: currentPackSize,
+                    price: currentPrice,
+                    variantId: selectedVariant?.id,
+                    image: selectedVariant?.image || product.image,
+                  });
+                  toast.success(`${qty}x ${product.name} (${currentPackSize}) added to cart`);
                 }}
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-md hover:bg-secondary disabled:opacity-50 transition-all active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground shadow-md hover:bg-secondary disabled:opacity-50 transition-all active:scale-95 cursor-pointer"
               >
                 <ShoppingCart className="h-4 w-4" /> Add to Cart
               </button>
 
               <button
-                disabled={product.stock === 0}
+                disabled={currentStock <= 0}
                 onClick={() => {
-                  addToCart(product.id, qty);
+                  addToCart(product.id, qty, {
+                    packSize: currentPackSize,
+                    price: currentPrice,
+                    variantId: selectedVariant?.id,
+                    image: selectedVariant?.image || product.image,
+                  });
                   if (!user) {
                     toast.info("Please sign in to proceed with your order");
                     router.push("/login?redirect=/checkout");
@@ -273,11 +577,50 @@ export default function ProductDetailPage() {
                     router.push("/checkout");
                   }
                 }}
-                className="rounded-full bg-accent px-8 py-3 text-sm font-bold text-accent-foreground shadow-md hover:opacity-95 disabled:opacity-50 transition-all active:scale-95"
+                className="rounded-full bg-accent px-8 py-3 text-sm font-bold text-accent-foreground shadow-md hover:opacity-95 disabled:opacity-50 transition-all active:scale-95 cursor-pointer"
               >
                 Buy Now
               </button>
             </div>
+
+            {/* Applicable Promotional Coupons */}
+            {state.coupons && state.coupons.filter((c) => c.isActive !== false).length > 0 && (
+              <div className="mt-6 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4 space-y-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <Tag className="h-3.5 w-3.5" /> Applicable Coupons &amp; Offers
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {state.coupons
+                    .filter((c) => c.isActive !== false)
+                    .slice(0, 3)
+                    .map((c) => {
+                      const isFixed = c.discountType === "fixed" || (!c.discountType && c.discount > 100);
+                      return (
+                        <div
+                          key={c.code}
+                          onClick={() => {
+                            navigator.clipboard.writeText(c.code);
+                            toast.success(`Coupon code "${c.code}" copied! Apply at checkout.`);
+                          }}
+                          className="group flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 text-xs shadow-2xs hover:border-primary cursor-pointer transition-all active:scale-95"
+                          title="Click to copy coupon code"
+                        >
+                          <span className="font-mono font-bold text-primary group-hover:underline">
+                            {c.code}
+                          </span>
+                          <span className="text-[11px] text-emerald-600 font-semibold">
+                            {isFixed ? `${inr(c.discount)} OFF` : `${c.discount}% OFF`}
+                          </span>
+                          <Copy className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                      );
+                    })}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Click any coupon to copy code and apply during purchasing in Cart or Checkout.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2 border-t border-border pt-6">
@@ -393,7 +736,27 @@ export default function ProductDetailPage() {
                         <Stars rating={r.rating} />
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">{r.date}</p>
-                      <p className="mt-2 text-foreground font-medium">&ldquo;{r.comment}&rdquo;</p>
+                      <p className="mt-2 text-foreground font-medium leading-relaxed">&ldquo;{r.comment}&rdquo;</p>
+                      {r.image && (
+                        <div className="mt-3">
+                          <div
+                            onClick={() => setPreviewImage(r.image || null)}
+                            className="relative inline-block cursor-pointer overflow-hidden rounded-xl border border-border bg-muted group"
+                          >
+                            <img
+                              src={r.image}
+                              alt="Farmer crop field result"
+                              className="h-28 w-36 sm:h-36 sm:w-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+                              <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                            </div>
+                          </div>
+                          <span className="block text-[11px] text-muted-foreground mt-1">
+                            📷 Click to enlarge farmer field photo
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -462,7 +825,7 @@ export default function ProductDetailPage() {
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Your Review / Field Observations</label>
+                      <label className="text-xs font-semibold uppercase text-muted-foreground mb-1 block">Your Review / Field Observations *</label>
                       <textarea
                         required
                         rows={3}
@@ -470,6 +833,15 @@ export default function ProductDetailPage() {
                         onChange={(e) => setForm({ ...form, comment: e.target.value })}
                         placeholder="Describe which crop you applied this on, application timing, and observed yield / vigor improvement..."
                         className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <ImageUploader
+                        value={form.image}
+                        onChange={(url) => setForm({ ...form, image: url })}
+                        label="Upload Field / Crop Result Photo (Optional)"
+                        folder="plant_health_solutions/reviews"
                       />
                     </div>
 
@@ -495,6 +867,27 @@ export default function ProductDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Image Preview Lightbox */}
+      {previewImage && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-white/20 bg-black shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black/90 shadow-md border border-white/20"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img src={previewImage} alt="Crop result full view" className="max-h-[80vh] w-auto object-contain" />
+          </div>
+        </div>
+      )}
 
       {/* Related Products */}
       {related.length > 0 && (

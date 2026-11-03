@@ -40,8 +40,8 @@ const mainNavLinks = [
 const mediaNavLinks = [
   {
     href: "/blog",
-    label: "Blog & Guides",
-    sub: "Research updates, agronomy advice & farming guides",
+    label: "Blog & Articles",
+    sub: "Research updates, agronomy advice & farming articles",
     icon: FileText,
   },
   {

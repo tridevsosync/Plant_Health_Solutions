@@ -1,5 +1,15 @@
 // Seed / master data for Plant Health Solutions Pvt. Ltd.
 
+export type ProductVariant = {
+  id?: string;
+  packSize: string;
+  price: number;
+  oldPrice?: number;
+  quantity: number;
+  image?: string;
+  sku?: string;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -18,6 +28,7 @@ export type Product = {
   usage: string;
   ingredients: string;
   badges: string[];
+  variants?: ProductVariant[];
 };
 
 export type Category = {
@@ -91,6 +102,7 @@ export type Review = {
   rating: number;
   date: string;
   comment: string;
+  image?: string;
   status?: "Pending" | "Approved" | "Rejected";
 };
 
@@ -151,10 +163,16 @@ export type Enquiry = {
 };
 
 export type Coupon = {
+  _id?: string;
+  id?: string;
   code: string;
   discount: number;
+  discountType?: "percentage" | "fixed";
   minOrder: number;
+  maxDiscount?: number;
   description: string;
+  isActive?: boolean;
+  expiryDate?: string;
 };
 
 export type Settings = {
@@ -202,6 +220,34 @@ export type Settings = {
   teamSectionBadge?: string;
   teamSectionTitle?: string;
   teamSectionSubtitle?: string;
+  // Home Popup settings
+  showHomePopup?: boolean;
+  homePopupImage?: string;
+  homePopupTitle?: string;
+  homePopupSubtitle?: string;
+  homePopupLink?: string;
+  homePopupButtonText?: string;
+  // Ad Section settings
+  showAdSection?: boolean;
+  adSectionImage?: string;
+  adSectionLink?: string;
+  adSectionTitle?: string;
+  // Floating Corner Action Buttons (Call, Insta, WhatsApp, YouTube)
+  showFloatingActions?: boolean;
+  floatingPosition?: string;
+  floatingCallEnabled?: boolean;
+  floatingCallNumber?: string;
+  floatingCallLabel?: string;
+  floatingWhatsappEnabled?: boolean;
+  floatingWhatsappNumber?: string;
+  floatingWhatsappMessage?: string;
+  floatingWhatsappLabel?: string;
+  floatingInstagramEnabled?: boolean;
+  floatingInstagramUrl?: string;
+  floatingInstagramLabel?: string;
+  floatingYoutubeEnabled?: boolean;
+  floatingYoutubeUrl?: string;
+  floatingYoutubeLabel?: string;
 };
 
 export type Crop = {
@@ -423,20 +469,28 @@ export const coupons: Coupon[] = [
   {
     code: "FARMER10",
     discount: 10,
+    discountType: "percentage",
     minOrder: 1000,
+    maxDiscount: 500,
     description: "10% off on all organic fertilizers for orders above ₹1,000",
+    isActive: true,
   },
   {
     code: "PHS500",
     discount: 500,
+    discountType: "fixed",
     minOrder: 5000,
     description: "Flat ₹500 discount on bulk farm inputs above ₹5,000",
+    isActive: true,
   },
   {
     code: "BIOPROMO",
     discount: 15,
+    discountType: "percentage",
     minOrder: 2000,
+    maxDiscount: 1000,
     description: "15% off on bio-fertilizer and micro-nutrient kits",
+    isActive: true,
   },
 ];
 

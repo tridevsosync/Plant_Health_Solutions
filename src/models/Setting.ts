@@ -46,6 +46,34 @@ export interface ISetting extends Document {
   teamSectionBadge?: string;
   teamSectionTitle?: string;
   teamSectionSubtitle?: string;
+  // Home Popup Customization Fields
+  showHomePopup?: boolean;
+  homePopupImage?: string;
+  homePopupTitle?: string;
+  homePopupSubtitle?: string;
+  homePopupLink?: string;
+  homePopupButtonText?: string;
+  // Ad Section Customization Fields
+  showAdSection?: boolean;
+  adSectionImage?: string;
+  adSectionLink?: string;
+  adSectionTitle?: string;
+  // Floating Corner Action Buttons (Call, Insta, WhatsApp, YouTube)
+  showFloatingActions?: boolean;
+  floatingPosition?: string;
+  floatingCallEnabled?: boolean;
+  floatingCallNumber?: string;
+  floatingCallLabel?: string;
+  floatingWhatsappEnabled?: boolean;
+  floatingWhatsappNumber?: string;
+  floatingWhatsappMessage?: string;
+  floatingWhatsappLabel?: string;
+  floatingInstagramEnabled?: boolean;
+  floatingInstagramUrl?: string;
+  floatingInstagramLabel?: string;
+  floatingYoutubeEnabled?: boolean;
+  floatingYoutubeUrl?: string;
+  floatingYoutubeLabel?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -141,6 +169,50 @@ const SettingSchema = new Schema<ISetting>(
       default:
         "Led by senior agronomists, biochemists, and farm operation specialists dedicated to advancing sustainable agriculture.",
     },
+    // Home Popup Customization Defaults
+    showHomePopup: { type: Boolean, default: true },
+    homePopupImage: {
+      type: String,
+      default:
+        "https://images.unsplash.com/photo-1592417817098-8f3d6eb22509?auto=format&fit=crop&w=1200&q=80",
+    },
+    homePopupTitle: { type: String, default: "Special Seasonal Agriculture Offer" },
+    homePopupSubtitle: {
+      type: String,
+      default:
+        "Get up to 25% off on research-backed bio-fertilizers and micronutrients.",
+    },
+    homePopupLink: { type: String, default: "/products" },
+    homePopupButtonText: { type: String, default: "Explore Products" },
+    // Ad Section Customization Defaults
+    showAdSection: { type: Boolean, default: true },
+    adSectionImage: {
+      type: String,
+      default:
+        "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1600&q=80",
+    },
+    adSectionLink: { type: String, default: "/products" },
+    adSectionTitle: { type: String, default: "Plant Health Solutions Featured Promotion" },
+    // Floating Corner Action Buttons (Call, Insta, WhatsApp, YouTube) Defaults
+    showFloatingActions: { type: Boolean, default: true },
+    floatingPosition: { type: String, default: "bottom-right" },
+    floatingCallEnabled: { type: Boolean, default: true },
+    floatingCallNumber: { type: String, default: "+91 91759 55009" },
+    floatingCallLabel: { type: String, default: "Call Helpline" },
+    floatingWhatsappEnabled: { type: Boolean, default: true },
+    floatingWhatsappNumber: { type: String, default: "+91 91759 55009" },
+    floatingWhatsappMessage: {
+      type: String,
+      default:
+        "Hello Plant Health Solutions, I would like to inquire about your products and crop solutions.",
+    },
+    floatingWhatsappLabel: { type: String, default: "Chat on WhatsApp" },
+    floatingInstagramEnabled: { type: Boolean, default: true },
+    floatingInstagramUrl: { type: String, default: "https://instagram.com" },
+    floatingInstagramLabel: { type: String, default: "Follow on Instagram" },
+    floatingYoutubeEnabled: { type: Boolean, default: true },
+    floatingYoutubeUrl: { type: String, default: "https://youtube.com" },
+    floatingYoutubeLabel: { type: String, default: "Watch on YouTube" },
   },
   { timestamps: true }
 );

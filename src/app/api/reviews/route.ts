@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     rating: Number(body.rating || 5),
     date,
     comment: body.comment.trim(),
+    image: body.image || "",
     status,
   };
 

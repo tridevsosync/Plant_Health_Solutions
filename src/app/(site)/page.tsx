@@ -19,10 +19,16 @@ import {
   Loader2,
   Sparkles,
   X,
+  ChevronLeft,
+  ChevronRight,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import { COMPANY } from "@/lib/data";
 import { inr, useApp, useUser } from "@/lib/store";
+import { HomePopup } from "@/components/site/HomePopup";
+import { AdSection } from "@/components/site/AdSection";
+import { ImageUploader } from "@/components/site/ImageUploader";
 
 export default function HomePage() {
   const { state, addToCart, toggleWishlist, submitTestimonialFeedback } = useApp();
@@ -37,7 +43,10 @@ export default function HomePage() {
     rating: 5,
     productId: "",
     quote: "",
+    image: "",
   });
+  const [testimonialIndex, setTestimonialIndex] = React.useState(0);
+  const [carouselPaused, setCarouselPaused] = React.useState(false);
 
   React.useEffect(() => {
     if (user?.name && !feedbackForm.name) {
@@ -67,6 +76,7 @@ export default function HomePage() {
       productId: feedbackForm.productId,
       productName: selProd?.name || "",
       quote: feedbackForm.quote.trim(),
+      image: feedbackForm.image || "",
       status: "Pending",
     });
     setSubmittingFeedback(false);
@@ -83,6 +93,7 @@ export default function HomePage() {
         rating: 5,
         productId: "",
         quote: "",
+        image: "",
       });
     } else {
       toast.error(res.error || "Failed to submit feedback");
@@ -103,13 +114,67 @@ export default function HomePage() {
       .slice(0, 16);
   }, [state.products, selectedCat]);
 
-  const approvedTestimonials = React.useMemo(() => {
-    const list = state.testimonials.filter((t) => t.status === "Approved" || !t.status);
-    return list.length > 0 ? list : [];
-  }, [state.testimonials]);
+  const approvedFeedbacks = React.useMemo(() => {
+    // 1. From testimonials
+    const tList = (state.testimonials || [])
+      .filter((t) => t.status === "Approved" || !t.status)
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        place: t.place,
+        crop: t.crop,
+        rating: t.rating || 5,
+        quote: t.quote,
+        productId: t.productId,
+        productName: t.productName,
+        image: t.image,
+      }));
+
+    // 2. From approved product reviews
+    const rList = (state.reviews || [])
+      .filter((r) => r.status === "Approved")
+      .map((r) => {
+        const prod = state.products.find((p) => p.id === r.productId);
+        return {
+          id: r.id,
+          name: r.name,
+          place: "Verified Farmer",
+          crop: prod?.category || "Field Crop",
+          rating: r.rating || 5,
+          quote: r.comment,
+          productId: r.productId,
+          productName: prod?.name || "Plant Health Product",
+          image: r.image,
+        };
+      });
+
+    return [...tList, ...rList];
+  }, [state.testimonials, state.reviews, state.products]);
+
+  // Auto-rotating timer: advances every 4.5 seconds showing 3 at a time
+  React.useEffect(() => {
+    if (carouselPaused || approvedFeedbacks.length <= 3) return;
+    const interval = setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % approvedFeedbacks.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [carouselPaused, approvedFeedbacks.length]);
+
+  const visibleFeedbacks = React.useMemo(() => {
+    const total = approvedFeedbacks.length;
+    if (total === 0) return [];
+    if (total <= 3) return approvedFeedbacks;
+    return [
+      approvedFeedbacks[testimonialIndex % total],
+      approvedFeedbacks[(testimonialIndex + 1) % total],
+      approvedFeedbacks[(testimonialIndex + 2) % total],
+    ];
+  }, [approvedFeedbacks, testimonialIndex]);
 
   return (
     <div>
+      {/* Welcome Pop-up */}
+      <HomePopup />
       {/* 1. Hero Section */}
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
@@ -447,6 +512,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Ad Section (Managed by Admin) */}
+      <AdSection />
+
       {/* 5. Why Choose Us Section */}
       <div className="bg-[#18361e] text-white">
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
@@ -564,74 +632,195 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 7. Testimonials Section */}
+      {/* 7. Testimonials & Verified Results Section (Auto-changing 3-at-a-time Carousel) */}
       <div className="bg-accent/25 border-y border-border/60">
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+        <section
+          className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24 lg:px-8"
+          onMouseEnter={() => setCarouselPaused(true)}
+          onMouseLeave={() => setCarouselPaused(false)}
+        >
           <div className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4 md:mb-14">
             <div>
-              <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
-                Farmer Testimonials &amp; Verified Results
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-accent px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+                  Farmer Testimonials &amp; Verified Results
+                </span>
+                {approvedFeedbacks.length > 3 && (
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary animate-pulse">
+                    Auto-rotating
+                  </span>
+                )}
+              </div>
               <h2 className="mt-2 max-w-3xl font-display text-3xl font-bold leading-tight text-primary md:text-4xl">
                 From farmers who trust us across India
               </h2>
               <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                Real crop observations from farmers using certified Plant Health Solutions inputs.
+                Real crop observations with photos and products from farmers using certified Plant Health Solutions inputs.
               </p>
             </div>
 
-            <button
-              onClick={() => setShowFeedbackModal(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md hover:bg-secondary transition-all active:scale-95 shrink-0"
-            >
-              <MessageSquareQuote className="h-4 w-4" /> Share Your Farm Story
-            </button>
+            <div className="flex items-center gap-3 shrink-0">
+              {/* Carousel Next / Prev Controls */}
+              {approvedFeedbacks.length > 3 && (
+                <div className="flex items-center gap-1.5 mr-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTestimonialIndex(
+                        (prev) => (prev - 1 + approvedFeedbacks.length) % approvedFeedbacks.length
+                      )
+                    }
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors shadow-2xs"
+                    title="Previous feedback"
+                    aria-label="Previous feedback"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTestimonialIndex((prev) => (prev + 1) % approvedFeedbacks.length)
+                    }
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted hover:text-primary transition-colors shadow-2xs"
+                    title="Next feedback"
+                    aria-label="Next feedback"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowFeedbackModal(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md hover:bg-secondary transition-all active:scale-95"
+              >
+                <MessageSquareQuote className="h-4 w-4" /> Share Your Farm Story
+              </button>
+            </div>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {approvedTestimonials.length === 0 ? (
+          {/* 3 Feedback Cards Grid */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-500">
+            {visibleFeedbacks.length === 0 ? (
               <div className="col-span-full rounded-2xl border border-dashed border-border bg-card/60 p-8 text-center text-muted-foreground">
                 <MessageSquareQuote className="mx-auto h-10 w-10 text-muted-foreground/40 mb-2" />
                 <p className="text-sm font-semibold text-foreground">No approved testimonials yet.</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Be the first farmer to submit feedback on our bio inputs!</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Be the first farmer to submit feedback on our bio inputs!
+                </p>
               </div>
             ) : (
-              approvedTestimonials.map((t) => (
-                <div key={t.id} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-6 shadow-xs transition-all hover:shadow-md">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <Quote className="h-7 w-7 text-secondary" />
-                      <div className="flex text-amber-500">
-                        {[...Array(t.rating || 5)].map((_, i) => (
-                          <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                        ))}
-                      </div>
-                    </div>
-                    {t.productName && (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary mb-2">
-                        <Sparkles className="h-3 w-3" /> {t.productName}
-                      </span>
-                    )}
-                    <p className="text-sm text-foreground leading-relaxed italic">
-                      &ldquo;{t.quote}&rdquo;
-                    </p>
-                  </div>
+              visibleFeedbacks.map((t, idx) => {
+                const linkedProduct = t.productId
+                  ? state.products.find((p) => p.id === t.productId)
+                  : null;
 
-                  <div className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                      {t.name ? t.name.charAt(0).toUpperCase() : "F"}
-                    </div>
+                return (
+                  <div
+                    key={`${t.id}_${idx}`}
+                    className="flex flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                  >
                     <div>
-                      <div className="text-sm font-bold text-foreground">{t.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {t.place} · <span className="font-semibold text-secondary">{t.crop}</span>
+                      {/* Product Association Header */}
+                      {linkedProduct ? (
+                        <Link
+                          href={`/products/${linkedProduct.id}`}
+                          className="flex items-center gap-3 rounded-2xl bg-muted/40 p-2.5 border border-border hover:border-primary/50 transition-all group mb-4"
+                        >
+                          <img
+                            src={linkedProduct.image}
+                            alt={linkedProduct.name}
+                            className="h-12 w-12 rounded-xl object-cover border border-border bg-background shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-secondary block">
+                              Verified Product
+                            </span>
+                            <p className="font-display text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                              {linkedProduct.name}
+                            </p>
+                            <span className="text-[11px] font-semibold text-primary">
+                              {inr(linkedProduct.price)}
+                            </span>
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-primary opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0 mr-1" />
+                        </Link>
+                      ) : t.productName ? (
+                        <div className="mb-4">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                            <Sparkles className="h-3 w-3" /> {t.productName}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {/* Header Rating & Quote icon */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex text-amber-500">
+                          {[...Array(t.rating || 5)].map((_, i) => (
+                            <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-500" />
+                          ))}
+                        </div>
+                        <Quote className="h-6 w-6 text-secondary/40" />
+                      </div>
+
+                      {/* User's Uploaded Crop Result Photo */}
+                      {t.image && (
+                        <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-border bg-muted mb-4 group/img">
+                          <img
+                            src={t.image}
+                            alt={`${t.name}'s crop field result`}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                          />
+                          <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs flex items-center gap-1">
+                            <Camera className="h-3 w-3" /> Field Result Photo
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Feedback Description / Quote */}
+                      <p className="text-sm text-foreground leading-relaxed italic line-clamp-4">
+                        &ldquo;{t.quote}&rdquo;
+                      </p>
+                    </div>
+
+                    {/* Farmer Identity Footer */}
+                    <div className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary border border-primary/20">
+                        {t.name ? t.name.charAt(0).toUpperCase() : "F"}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-foreground truncate">{t.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {t.place} · <span className="font-semibold text-secondary">{t.crop}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
+
+          {/* Carousel Pagination Indicator Dots */}
+          {approvedFeedbacks.length > 3 && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              {approvedFeedbacks.slice(0, Math.min(approvedFeedbacks.length, 8)).map((_, i) => {
+                const isActive = testimonialIndex % approvedFeedbacks.length === i;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setTestimonialIndex(i)}
+                    className={`h-2 rounded-full transition-all ${
+                      isActive ? "w-7 bg-primary" : "w-2 bg-border hover:bg-muted-foreground/50"
+                    }`}
+                    title={`Slide ${i + 1}`}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
 
@@ -773,6 +962,15 @@ export default function HomePage() {
                     onChange={(e) => setFeedbackForm({ ...feedbackForm, quote: e.target.value })}
                     placeholder="Share details on application schedule, crop vigor, pest/disease recovery, or yield improvement..."
                     className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <ImageUploader
+                    value={feedbackForm.image}
+                    onChange={(url) => setFeedbackForm({ ...feedbackForm, image: url })}
+                    label="Upload Farm / Crop Result Photo (Optional)"
+                    folder="plant_health_solutions/testimonials"
                   />
                 </div>
 

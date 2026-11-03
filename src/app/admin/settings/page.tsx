@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Building2,
   Phone,
+  PhoneCall,
   Truck,
   Globe,
   Save,
@@ -25,12 +26,14 @@ import {
   Image as ImageIcon,
   Compass,
   UserCheck,
+  Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { inr, useApp, type Settings } from "@/lib/store";
 import { AdminPage, Btn, Field, Panel, inputCls } from "@/components/site/AdminUI";
+import { ImageUploader } from "@/components/site/ImageUploader";
 
-type TabKey = "general" | "contact" | "contactPage" | "aboutPage" | "store" | "social";
+type TabKey = "general" | "contact" | "contactPage" | "aboutPage" | "store" | "social" | "ads" | "floatingButtons";
 
 export default function AdminSettingsPage() {
   const { state, saveSettings, refreshData } = useApp();
@@ -75,6 +78,7 @@ export default function AdminSettingsPage() {
     { id: "aboutPage", label: "About & Team Settings", icon: UserCheck },
     { id: "store", label: "Store & Shipping", icon: Truck },
     { id: "social", label: "Social Links", icon: Globe },
+    { id: "ads", label: "Popup & Ads", icon: Megaphone },
   ];
 
   return (
@@ -792,6 +796,326 @@ export default function AdminSettingsPage() {
                       placeholder="https://twitter.com/planthealthsol"
                     />
                   </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 7: Popup & Ad Section */}
+            {activeTab === "ads" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <div>
+                    <h3 className="font-display text-base font-bold text-foreground">
+                      Homepage Welcome Pop-up & Ad Section
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Manage the welcome pop-up with its corner cross button and the homepage Ad section banner.
+                    </p>
+                  </div>
+                  <Link
+                    href="/admin/ads"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    Open Full Ads Manager &rarr;
+                  </Link>
+                </div>
+
+                {/* Pop-up settings */}
+                <div className="rounded-2xl border border-border p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-display text-sm font-bold text-foreground">
+                        Homepage Welcome Pop-up Modal
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Displays when a visitor opens the homepage. Features a dismissible close cross button.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.showHomePopup !== false}
+                        onChange={(e) => setForm({ ...form, showHomePopup: e.target.checked })}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-checked:bg-primary peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                    </label>
+                  </div>
+
+                  <ImageUploader
+                    value={form.homePopupImage || ""}
+                    onChange={(url) => setForm({ ...form, homePopupImage: url })}
+                    label="Pop-up Image Banner"
+                    folder="plant_health_solutions/popups"
+                  />
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Pop-up Headline (Optional)">
+                      <input
+                        className={inputCls}
+                        value={form.homePopupTitle || ""}
+                        onChange={(e) => setForm({ ...form, homePopupTitle: e.target.value })}
+                        placeholder="e.g. Special Seasonal Farmer Offer!"
+                      />
+                    </Field>
+                    <Field label="Redirect URL (Optional)">
+                      <input
+                        className={inputCls}
+                        value={form.homePopupLink || ""}
+                        onChange={(e) => setForm({ ...form, homePopupLink: e.target.value })}
+                        placeholder="/products"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* Ad section settings */}
+                <div className="rounded-2xl border border-border p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-display text-sm font-bold text-foreground">
+                          Homepage Ad Section
+                        </h4>
+                        <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                          Image Only
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Promotional advertisement banner displayed directly on the homepage. Admin will upload image only.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.showAdSection !== false}
+                        onChange={(e) => setForm({ ...form, showAdSection: e.target.checked })}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-checked:bg-secondary peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                    </label>
+                  </div>
+
+                  <ImageUploader
+                    value={form.adSectionImage || ""}
+                    onChange={(url) => setForm({ ...form, adSectionImage: url })}
+                    label="Ad Banner Image"
+                    folder="plant_health_solutions/ads"
+                  />
+
+                  <Field label="Ad Click Redirect URL (Optional)">
+                    <input
+                      className={inputCls}
+                      value={form.adSectionLink || ""}
+                      onChange={(e) => setForm({ ...form, adSectionLink: e.target.value })}
+                      placeholder="/products"
+                    />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            
+            {/* Tab 8: Floating Corner Buttons */}
+            {activeTab === "floatingButtons" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <div>
+                    <h3 className="font-display text-base font-bold text-foreground">
+                      Right-Corner Floating Quick Action Buttons
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Manage Call, Instagram, WhatsApp, and YouTube buttons displayed in the right-side corner of the website.
+                    </p>
+                  </div>
+                  <Link
+                    href="/admin/floating-buttons"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    Open Full Manager & Live Preview &rarr;
+                  </Link>
+                </div>
+
+                {/* Master Switch */}
+                <div className="rounded-2xl border border-border p-4 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-display text-sm font-bold text-foreground">
+                      Enable Floating Action Buttons
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Toggle whether the right-side corner floating action buttons are shown.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      type="checkbox"
+                      checked={form.showFloatingActions !== false}
+                      onChange={(e) => setForm({ ...form, showFloatingActions: e.target.checked })}
+                      className="peer sr-only"
+                    />
+                    <div className="peer h-6 w-11 rounded-full bg-muted peer-checked:bg-primary peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                  </label>
+                </div>
+
+                {/* Call Button */}
+                <div className="rounded-2xl border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-3 w-3 rounded-full bg-[#0284c7]" />
+                      <h4 className="font-display text-sm font-bold text-foreground">1. Call Helpline Button</h4>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.floatingCallEnabled !== false}
+                        onChange={(e) => setForm({ ...form, floatingCallEnabled: e.target.checked })}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-checked:bg-[#0284c7] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                    </label>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Phone Number to Dial">
+                      <input
+                        className={inputCls}
+                        value={form.floatingCallNumber ?? form.phone ?? "+91 91759 55009"}
+                        onChange={(e) => setForm({ ...form, floatingCallNumber: e.target.value })}
+                        placeholder="+91 91759 55009"
+                      />
+                    </Field>
+                    <Field label="Button Tooltip">
+                      <input
+                        className={inputCls}
+                        value={form.floatingCallLabel ?? "Call Helpline"}
+                        onChange={(e) => setForm({ ...form, floatingCallLabel: e.target.value })}
+                        placeholder="Call Helpline"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* WhatsApp Button */}
+                <div className="rounded-2xl border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-3 w-3 rounded-full bg-[#25D366]" />
+                      <h4 className="font-display text-sm font-bold text-foreground">2. WhatsApp Chat Button</h4>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.floatingWhatsappEnabled !== false}
+                        onChange={(e) => setForm({ ...form, floatingWhatsappEnabled: e.target.checked })}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-checked:bg-[#25D366] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                    </label>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="WhatsApp Number">
+                      <input
+                        className={inputCls}
+                        value={form.floatingWhatsappNumber ?? form.whatsapp ?? "+91 91759 55009"}
+                        onChange={(e) => setForm({ ...form, floatingWhatsappNumber: e.target.value })}
+                        placeholder="+91 91759 55009"
+                      />
+                    </Field>
+                    <Field label="Button Tooltip">
+                      <input
+                        className={inputCls}
+                        value={form.floatingWhatsappLabel ?? "Chat on WhatsApp"}
+                        onChange={(e) => setForm({ ...form, floatingWhatsappLabel: e.target.value })}
+                        placeholder="Chat on WhatsApp"
+                      />
+                    </Field>
+                    <div className="sm:col-span-2">
+                      <Field label="Default Message">
+                        <textarea
+                          rows={2}
+                          className={inputCls}
+                          value={form.floatingWhatsappMessage ?? "Hello Plant Health Solutions, I would like to inquire about your products and crop solutions."}
+                          onChange={(e) => setForm({ ...form, floatingWhatsappMessage: e.target.value })}
+                          placeholder="Hello..."
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instagram Button */}
+                <div className="rounded-2xl border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-3 w-3 rounded-full bg-[#dc2743]" />
+                      <h4 className="font-display text-sm font-bold text-foreground">3. Instagram Profile Button</h4>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.floatingInstagramEnabled !== false}
+                        onChange={(e) => setForm({ ...form, floatingInstagramEnabled: e.target.checked })}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-checked:bg-[#dc2743] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                    </label>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Instagram Profile URL">
+                      <input
+                        type="url"
+                        className={inputCls}
+                        value={form.floatingInstagramUrl ?? form.instagram ?? "https://instagram.com"}
+                        onChange={(e) => setForm({ ...form, floatingInstagramUrl: e.target.value })}
+                        placeholder="https://instagram.com/profile"
+                      />
+                    </Field>
+                    <Field label="Button Tooltip">
+                      <input
+                        className={inputCls}
+                        value={form.floatingInstagramLabel ?? "Follow on Instagram"}
+                        onChange={(e) => setForm({ ...form, floatingInstagramLabel: e.target.value })}
+                        placeholder="Follow on Instagram"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                {/* YouTube Button */}
+                <div className="rounded-2xl border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-3 w-3 rounded-full bg-[#FF0000]" />
+                      <h4 className="font-display text-sm font-bold text-foreground">4. YouTube Channel Button</h4>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.floatingYoutubeEnabled !== false}
+                        onChange={(e) => setForm({ ...form, floatingYoutubeEnabled: e.target.checked })}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-muted peer-checked:bg-[#FF0000] peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                    </label>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="YouTube Channel URL">
+                      <input
+                        type="url"
+                        className={inputCls}
+                        value={form.floatingYoutubeUrl ?? form.youtube ?? "https://youtube.com"}
+                        onChange={(e) => setForm({ ...form, floatingYoutubeUrl: e.target.value })}
+                        placeholder="https://youtube.com/@channel"
+                      />
+                    </Field>
+                    <Field label="Button Tooltip">
+                      <input
+                        className={inputCls}
+                        value={form.floatingYoutubeLabel ?? "Watch on YouTube"}
+                        onChange={(e) => setForm({ ...form, floatingYoutubeLabel: e.target.value })}
+                        placeholder="Watch on YouTube"
+                      />
+                    </Field>
+                  </div>
                 </div>
               </div>
             )}
